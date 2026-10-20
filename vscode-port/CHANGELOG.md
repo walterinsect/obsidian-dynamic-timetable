@@ -1,5 +1,7 @@
 # Changelog
 
+English | [日本語](https://github.com/walterinsect/obsidian-dynamic-timetable/blob/vscode-port/vscode-port/CHANGELOG.ja.md)
+
 All notable changes to the VS Code port of Dynamic Timetable. The original Obsidian plugin is by L7Cy (MIT).
 
 ## 0.4.0

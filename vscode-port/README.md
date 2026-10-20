@@ -1,5 +1,7 @@
 # Dynamic Timetable (VS Code)
 
+English | [日本語](https://github.com/walterinsect/obsidian-dynamic-timetable/blob/vscode-port/vscode-port/README.ja.md)
+
 A VS Code extension that builds a timetable from the estimates in a Markdown task list.
 It is a port of [L7Cy/obsidian-dynamic-timetable](https://github.com/L7Cy/obsidian-dynamic-timetable) (MIT).
 
