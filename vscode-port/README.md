@@ -1,97 +1,96 @@
 # Dynamic Timetable (VS Code)
 
-Markdown のタスクリストから、見積り時間に基づくタイムテーブルを作る VS Code 拡張です。
-[L7Cy/obsidian-dynamic-timetable](https://github.com/L7Cy/obsidian-dynamic-timetable)(MIT)の移植版です。
+A VS Code extension that builds a timetable from the estimates in a Markdown task list.
+It is a port of [L7Cy/obsidian-dynamic-timetable](https://github.com/L7Cy/obsidian-dynamic-timetable) (MIT).
 
 ```markdown
 ---
 startTime: 09:00:00
 ---
-- [ ] 設計レビューの準備 ; 30 #work
-- [ ] 昼休み ; 45 @ 12:00 #life
-- [ ] 実装 ; 90 #work
+- [ ] Prepare design review ; 30 #work
+- [ ] Lunch ; 45 @ 12:00 #life
+- [ ] Implementation ; 90 #work
 ```
 
-- `;` の後ろが見積り(分)、`@` の後ろが明示的な開始時刻、`#` がカテゴリです。
-- アクティビティバーの **Dynamic Timetable** を開くと、アクティブな Markdown ファイルのタイムテーブル(Timetable)とカテゴリ別の集計(Statistics)が表示されます。
-- Statistics は `#カテゴリ` ごとの実績(完了)と残り(見積り)を積み上げ棒で表示します。色は Timetable と共通です。
-- コマンド: Show Timetable / Show Statistics / Complete Task / Interrupt Task / Refresh / Pin Current File
-- Complete / Interrupt はファイルを書き換え、`startTime` を現在時刻に更新します(既定で保存まで行います)。
+- The number after `;` is the estimate in minutes, the time after `@` is an explicit start time, and `#` marks a category.
+- Open **Dynamic Timetable** in the Activity Bar to see the timetable (Timetable) and the per-category totals (Statistics) for the active Markdown file.
+- Statistics shows a stacked bar per `#category`: actual (completed) and remaining (estimated). Colors are shared with the Timetable.
+- Commands: Show Timetable / Show Statistics / Complete Task / Interrupt Task / Refresh / Pin Current File / Open Settings
+- Complete and Interrupt rewrite the file and update `startTime` to the current time. By default the file is also saved.
 
-## 打刻(Created / Done)
+## Timestamps (Created / Done)
 
-`dynamicTimetable.enableTimestamps`(**既定はオン**)により、タスク行へ日付付きの時刻を記録します。完了行の実績開始時刻(`@ YYYY-MM-DD HH:mm`)と `(@created/@done)` は、既定で `YYYY-MM-DD HH:mm` 形式です。オフにすると打刻は行われず、開始時刻は従来どおり `@ HH:MM` で書かれます。`@ HH:MM` / `@ HHMM` / `@ YYYY-MM-DDTHH:mm` の旧形式も引き続き読み取れます。
+`dynamicTimetable.enableTimestamps` (**on by default**) records date-time stamps on the task line. The actual start time on a completed line (`@ YYYY-MM-DD HH:mm`) and `(@created/@done)` use the `YYYY-MM-DD HH:mm` format by default. When the setting is off, no stamps are written and the start time is written as `@ HH:MM`, as before. The legacy forms `@ HH:MM`, `@ HHMM` and `@ YYYY-MM-DDTHH:mm` can still be read.
 
 ```markdown
-- [ ] 実装 ; 60 #work (@created: 2026-10-21 09:12)                       ← テンプレートで作成
-- [x] 実装 ; 37 @ 2026-10-21 09:12 #work (@created: 2026-10-21 09:12) (@done: 2026-10-21 09:49)   ← Complete
+- [ ] Implementation ; 60 #work (@created: 2026-10-21 09:12)                       <- created from a template
+- [x] Implementation ; 37 @ 2026-10-21 09:12 #work (@created: 2026-10-21 09:12) (@done: 2026-10-21 09:49)   <- after Complete
 ```
 
-| 操作 | 記録 |
+| Action | What is recorded |
 |---|---|
-| テンプレートでタスクを作成 | `(@created: 作成時刻)` |
-| Complete | 完了行に `(@done: 完了時刻)`。既存の Created は保持 |
-| Interrupt | 完了行に `(@done: 中断時刻)`。残りのタスクに `(@created: 中断時刻)`(元の Created は引き継ぎません) |
+| Create a task from a template | `(@created: creation time)` |
+| Complete | `(@done: completion time)` on the completed line. An existing Created is kept |
+| Interrupt | `(@done: interrupt time)` on the completed line, and `(@created: interrupt time)` on the remaining task (the original Created is not carried over) |
 
-- 書式は `dynamicTimetable.timestampFormat`(既定 `YYYY-MM-DD HH:mm`、トークン `YYYY MM DD HH mm ss`、`)` は使えません)。
-- 手書きのタスクに Created は後付けしません(Done のみ)。
-- 刻印はタスク名・見積り・カテゴリの解釈には影響しません。無効にしても既存の刻印は消えません。
+- The format is `dynamicTimetable.timestampFormat` (default `YYYY-MM-DD HH:mm`; tokens `YYYY MM DD HH mm ss`; `)` is not allowed). It does not affect the format of the actual start time, which is always `YYYY-MM-DD HH:mm`.
+- Created is never added to hand-written tasks (only Done).
+- Stamps do not affect how the task name, estimate or categories are read. Turning the feature off does not remove existing stamps.
 
-## 設定画面(GUI)
+## Settings UI
 
-設定は「Display / Task syntax / Categories / Behavior / Timestamps / Task templates」に分けて設定画面に表示されます。コマンドパレットの **Dynamic Timetable: Open Settings** でこの拡張の設定だけを開けます。
+Settings are grouped into Display, Task syntax, Categories, Behavior, Timestamps and Task templates. The command **Dynamic Timetable: Open Settings** opens the Settings UI filtered to this extension.
 
-オブジェクトの配列(`taskTemplates`, `categoryColors`)は VS Code の設定画面では「settings.json で編集」としか出ないため、GUI で直接編集できるキー/値形式の設定を追加しています。
+Settings that are arrays of objects (`taskTemplates`, `categoryColors`) only show an "Edit in settings.json" link in the VS Code Settings UI. For that reason there are also key/value settings that can be edited directly in the UI:
 
-| GUIで編集できる設定 | 内容 | 同名の扱い |
+| Setting editable in the UI | Content | If a name exists in both |
 |---|---|---|
-| `dynamicTimetable.taskTemplateMap` | テンプレート名 → 1行のタスク(スニペット構文) | `taskTemplates` が優先 |
-| `dynamicTimetable.categoryColorMap` | カテゴリ名 → 色(`#4caf50`) | `categoryColors` が優先 |
+| `dynamicTimetable.taskTemplateMap` | template name -> one-line task (snippet syntax) | `taskTemplates` wins |
+| `dynamicTimetable.categoryColorMap` | category name -> color (`#4caf50`) | `categoryColors` wins |
 
-複数行のテンプレートは従来どおり `taskTemplates`(settings.json)に書きます。
+Write multi-line templates in `taskTemplates` (settings.json) as before.
 
-## 定型タスクの挿入
+## Inserting task templates
 
-`dynamicTimetable.taskTemplates` にテンプレートを定義します。`body` は **VS Code のスニペット構文**です
-(`${1:30}` のタブ停止、`$CURRENT_HOUR` などの変数が使えます)。
+Define templates in `dynamicTimetable.taskTemplates`. `body` uses **VS Code snippet syntax** (tab stops such as `${1:30}` and variables such as `$CURRENT_HOUR` work).
 
 ```jsonc
 "dynamicTimetable.taskTemplates": [
-  { "name": "break",  "body": "- [ ] 休憩 ; 15 #life" },
-  { "name": "review", "body": ["- [ ] ${1:対象}レビュー ; ${2:30} #work", "- [ ] 指摘対応 ; 20 #work"] }
+  { "name": "break",  "body": "- [ ] Break ; 15 #life" },
+  { "name": "review", "body": ["- [ ] ${1:Target} review ; ${2:30} #work", "- [ ] Address feedback ; 20 #work"] }
 ]
 ```
 
-- コマンド: **Dynamic Timetable: Insert Task Template**(一覧から選択)/ **Insert Task Template 1〜5**(設定の N 番目を直接挿入)
-- 挿入位置は **現在のタスク(最初の未完了タスク)の次の行**です。現在のタスクが無ければ最後のタスク行の後、タスクが無ければファイル末尾に挿入します。
-- 対象ファイルのエディタが見えていないときは、タブ停止なし(既定値のまま)で挿入します。
-- 打刻が有効なら、挿入した各タスクに `(@created: …)` が付きます。
+- Commands: **Dynamic Timetable: Insert Task Template** (pick from a list) and **Insert Task Template 1–5** (insert the Nth template directly).
+- The template is inserted on the **line after the current task** (the first uncompleted task). If there is no current task, it goes after the last task line, or at the end of the file if there are no tasks.
+- If the editor of the target file is not visible, the template is inserted with its default values and without tab stops.
+- When timestamps are enabled, each inserted task gets `(@created: …)`.
 
-ショートカットキーは既定では割り当てていません。`keybindings.json` で割り当ててください。
+No keybindings are assigned by default. Assign them in `keybindings.json`:
 
 ```jsonc
 [
-  // 一覧から選ぶ
+  // Pick from a list
   { "key": "ctrl+alt+t", "command": "dynamicTimetable.insertTaskTemplate", "when": "editorLangId == markdown" },
-  // 特定のテンプレートを名前で指定
+  // A specific template by name
   { "key": "ctrl+alt+b", "command": "dynamicTimetable.insertTaskTemplate", "args": { "template": "break" }, "when": "editorLangId == markdown" },
-  // 設定の 2 番目のテンプレート
+  // The 2nd template in the settings
   { "key": "ctrl+alt+2", "command": "dynamicTimetable.insertTaskTemplate2", "when": "editorLangId == markdown" }
 ]
 ```
 
-### 実機で確認してほしい項目(自動テストでは検証できません)
+### Manual checks in a real VS Code (automated tests cannot cover these)
 
-スニペットの展開は VS Code 本体の機能のため、次の点は実機で確認してください。
+Snippet expansion is a VS Code feature, so please check the following in the real editor:
 
-1. `${1:30}` などのタブ停止にカーソルが入り、Tab で次へ進める。
-2. 複数行のテンプレートで、2 行目以降のインデントが現在のタスク行に揃う。
-3. 挿入を 1 回の Undo で戻せる。
-4. CRLF のファイルで改行が混在しない。
-5. キーバインドの `args`(名前指定)が動く。
+1. The cursor lands in tab stops such as `${1:30}`, and Tab moves to the next one.
+2. In a multi-line template, the second and later lines are indented to match the current task line.
+3. One Undo reverts the whole insertion.
+4. In a CRLF file, line endings are not mixed.
+5. The keybinding `args` (selection by name) works.
 
-## 元プラグインとの違い
+## Differences from the original plugin
 
-- 辞書ファイル連携(various-complements)は未移植です。
-- Statistics は chart.js を使わない自前の棒グラフです(カテゴリ無しのタスクは集計対象外で、件数のみ表示します)。
-- `customUrlScheme` はユーザー設定のみ有効です(ワークスペース設定では無効)。
+- Dictionary-file integration (various-complements) is not ported.
+- Statistics uses a built-in bar chart instead of chart.js (tasks without a category are not counted; only their number is shown).
+- `customUrlScheme` is honored only in user settings (it is ignored in workspace settings).
