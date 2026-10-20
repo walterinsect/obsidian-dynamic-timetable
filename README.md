@@ -1,53 +1,98 @@
-# Obsidian Dynamic Timetable
+# Dynamic Timetable (VS Code)
 
-Dynamic Timetable is an [Obsidian](https://obsidian.md/) plugin that dynamically generates task timetables from Markdown files. This plugin was inspired by [タスクシュート(TaskChute)](https://cyblog.biz/pro/taskchute2/index2.php).
+English | [日本語](https://github.com/walterinsect/obsidian-dynamic-timetable/blob/vscode-port/vscode-port/README.ja.md)
 
-[![Image from Gyazo](https://i.gyazo.com/6f1eb253ff398b6cafb3ac8835925753.png)](https://gyazo.com/6f1eb253ff398b6cafb3ac8835925753)
+A VS Code extension that builds a timetable from the estimates in a Markdown task list.
+It is a port of [L7Cy/obsidian-dynamic-timetable](https://github.com/L7Cy/obsidian-dynamic-timetable) (MIT).
 
-## Installation
-
-The plugin is now officially released as a community plugin. You can install it from below.
-
-```
-obsidian://show-plugin?id=dynamic-timetable
-```
-
-If you want to try the beta version, install it with `L7Cy/obsidian-dynamic-timetable` using [BRAT](https://github.com/TfTHacker/obsidian42-brat).
-
-## Usage
-
-### Task description format
-
-The plugin supports the following markdown formats for tasks.
-
-```
-- [ ] Task name ; Estimated time
-- [ ] Task name ; Estimated time @ Start time
-- [ ] Task name @ Start time ; Estimated time
+```markdown
+---
+startTime: 09:00:00
+---
+- [ ] Prepare design review ; 30 #work
+- [ ] Lunch ; 45 @ 12:00 #life
+- [ ] Implementation ; 90 #work
 ```
 
-### Start time format
+- The number after `;` is the estimate in minutes, the time after `@` is an explicit start time, and `#` marks a category.
+- Open **Dynamic Timetable** in the Activity Bar to see the timetable (Timetable) and the per-category totals (Statistics) for the active Markdown file.
+- Statistics shows a stacked bar per `#category`: actual (completed) and remaining (estimated). Colors are shared with the Timetable.
+- Commands: Show Timetable / Show Statistics / Complete Task / Interrupt Task / Refresh / Pin Current File / Open Settings
+- Complete and Interrupt rewrite the file and update `startTime` to the current time. By default the file is also saved.
 
-The start time is optional and can be added in two formats:
+## Timestamps (Created / Done)
 
-- Time only (e.g., `@ 14:30`)
-- Date and time (e.g., `@ 2023-04-16T14:30`)
+`dynamicTimetable.enableTimestamps` (**on by default**) records date-time stamps on the task line. The actual start time on a completed line (`@ YYYY-MM-DD HH:mm`) and `(@created/@done)` use the `YYYY-MM-DD HH:mm` format by default. When the setting is off, no stamps are written and the start time is written as `@ HH:MM`, as before. The legacy forms `@ HH:MM`, `@ HHMM` and `@ YYYY-MM-DDTHH:mm` can still be read.
 
-### Task completion and interruption
+```markdown
+- [ ] Implementation ; 60 #work (@created: 2026-10-21 09:12)                       <- created from a template
+- [x] Implementation ; 37 @ 2026-10-21 09:12 #work (@created: 2026-10-21 09:12) (@done: 2026-10-21 09:49)   <- after Complete
+```
 
-To complete or interrupt a task, execute the commands "Complete Task" or "Interrupt Task." Upon execution, the topmost incomplete task is checked, and the estimated time and scheduled start time are overwritten with the actual time taken and actual start time.
+| Action | What is recorded |
+|---|---|
+| Create a task from a template | `(@created: creation time)` |
+| Complete | `(@done: completion time)` on the completed line. An existing Created is kept |
+| Interrupt | `(@done: interrupt time)` on the completed line, and `(@created: interrupt time)` on the remaining task (the original Created is not carried over) |
 
-[![Image from Gyazo](https://i.gyazo.com/687f9193d6f01d1eb4f1e05b7ccda84b.gif)](https://gyazo.com/687f9193d6f01d1eb4f1e05b7ccda84b)
+- The format is `dynamicTimetable.timestampFormat` (default `YYYY-MM-DD HH:mm`; tokens `YYYY MM DD HH mm ss`; `)` is not allowed). It does not affect the format of the actual start time, which is always `YYYY-MM-DD HH:mm`.
+- Created is never added to hand-written tasks (only Done).
+- Stamps do not affect how the task name, estimate or categories are read. Turning the feature off does not remove existing stamps.
 
-In the case of "Interrupt Task," in addition to this, a new task with the same name is created and the remaining time is set to the estimated time.
+## Settings UI
 
-[![Image from Gyazo](https://i.gyazo.com/526d2f3eaa20b533dffc2093a6758d9b.gif)](https://gyazo.com/526d2f3eaa20b533dffc2093a6758d9b)
+Settings are grouped into Display, Task syntax, Categories, Behavior, Timestamps and Task templates. The command **Dynamic Timetable: Open Settings** opens the Settings UI filtered to this extension.
 
-### Task text color
+Settings that are arrays of objects (`taskTemplates`, `categoryColors`) only show an "Edit in settings.json" link in the VS Code Settings UI. For that reason there are also key/value settings that can be edited directly in the UI:
 
-When a start time is specified, tasks will have a text color based on the comparison with the end time of the previous task:
+| Setting editable in the UI | Content | If a name exists in both |
+|---|---|---|
+| `dynamicTimetable.taskTemplateMap` | template name -> one-line task (snippet syntax) | `taskTemplates` wins |
+| `dynamicTimetable.categoryColorMap` | category name -> color (`#4caf50`) | `categoryColors` wins |
 
-- 🟢Green: Indicates that the task is likely to start at the scheduled time, and there may be room to add more tasks before it.
-- 🔴Red: Indicates that it may be difficult to start the task at the scheduled time, and adjustments to previous tasks may be necessary.
+Write multi-line templates in `taskTemplates` (settings.json) as before.
 
-This visual cue helps us understand how to effectively adjust our tasks.
+## Inserting task templates
+
+Define templates in `dynamicTimetable.taskTemplates`. `body` uses **VS Code snippet syntax** (tab stops such as `${1:30}` and variables such as `$CURRENT_HOUR` work).
+
+```jsonc
+"dynamicTimetable.taskTemplates": [
+  { "name": "break",  "body": "- [ ] Break ; 15 #life" },
+  { "name": "review", "body": ["- [ ] ${1:Target} review ; ${2:30} #work", "- [ ] Address feedback ; 20 #work"] }
+]
+```
+
+- Commands: **Dynamic Timetable: Insert Task Template** (pick from a list) and **Insert Task Template 1–5** (insert the Nth template directly).
+- The template is inserted on the **line after the current task** (the first uncompleted task). If there is no current task, it goes after the last task line, or at the end of the file if there are no tasks.
+- If the editor of the target file is not visible, the template is inserted with its default values and without tab stops.
+- When timestamps are enabled, each inserted task gets `(@created: …)`.
+
+No keybindings are assigned by default. Assign them in `keybindings.json`:
+
+```jsonc
+[
+  // Pick from a list
+  { "key": "ctrl+alt+t", "command": "dynamicTimetable.insertTaskTemplate", "when": "editorLangId == markdown" },
+  // A specific template by name
+  { "key": "ctrl+alt+b", "command": "dynamicTimetable.insertTaskTemplate", "args": { "template": "break" }, "when": "editorLangId == markdown" },
+  // The 2nd template in the settings
+  { "key": "ctrl+alt+2", "command": "dynamicTimetable.insertTaskTemplate2", "when": "editorLangId == markdown" }
+]
+```
+
+### Manual checks in a real VS Code (automated tests cannot cover these)
+
+Snippet expansion is a VS Code feature, so please check the following in the real editor:
+
+1. The cursor lands in tab stops such as `${1:30}`, and Tab moves to the next one.
+2. In a multi-line template, the second and later lines are indented to match the current task line.
+3. One Undo reverts the whole insertion.
+4. In a CRLF file, line endings are not mixed.
+5. The keybinding `args` (selection by name) works.
+
+## Differences from the original plugin
+
+- Dictionary-file integration (various-complements) is not ported.
+- Statistics uses a built-in bar chart instead of chart.js (tasks without a category are not counted; only their number is shown).
+- `customUrlScheme` is honored only in user settings (it is ignored in workspace settings).
