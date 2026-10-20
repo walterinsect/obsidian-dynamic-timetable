@@ -1,0 +1,13 @@
+**
+!dist/extension.js
+!dist/timetable.js
+!dist/statistics.js
+!dist/webview.css
+!dist/codicon.css
+!dist/codicon.ttf
+!media/icon.svg
+!media/icon.png
+!CHANGELOG.md
+!package.json
+!LICENSE.md
+!README.md

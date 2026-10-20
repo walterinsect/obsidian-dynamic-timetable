@@ -1,0 +1,429 @@
+{
+  "name": "dynamic-timetable",
+  "scripts": {
+    "build:core": "tsc -p .",
+    "typecheck": "tsc -p tsconfig.host.json && tsc -p tsconfig.webview.json",
+    "build": "npm run typecheck && node esbuild.config.mjs",
+    "build:prod": "npm run typecheck && node esbuild.config.mjs production",
+    "test": "npm run build:core && npm run build && node --test \"test/*.test.mjs\"",
+    "package": "npm run build:prod && vsce package --allow-missing-repository"
+  },
+  "devDependencies": {
+    "@types/node": "^20.19.43",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@types/vscode": "^1.85.0",
+    "@vscode/vsce": "^4.0.0",
+    "esbuild": "^0.28.2"
+  },
+  "dependencies": {
+    "@vscode/codicons": "^0.0.46-24",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1"
+  },
+  "displayName": "Dynamic Timetable",
+  "description": "Turn Markdown task lists with estimates into a live timetable (port of the Obsidian plugin).",
+  "version": "0.4.0",
+  "publisher": "walterinsect",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Productivity",
+    "Other"
+  ],
+  "main": "./dist/extension.js",
+  "activationEvents": [],
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "dynamicTimetable",
+          "title": "Dynamic Timetable",
+          "icon": "media/icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "dynamicTimetable": [
+        {
+          "type": "webview",
+          "id": "dynamicTimetable.timetable",
+          "name": "Timetable"
+        },
+        {
+          "type": "webview",
+          "id": "dynamicTimetable.statistics",
+          "name": "Statistics"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "dynamicTimetable.show",
+        "title": "Dynamic Timetable: Show Timetable"
+      },
+      {
+        "command": "dynamicTimetable.showStatistics",
+        "title": "Dynamic Timetable: Show Statistics"
+      },
+      {
+        "command": "dynamicTimetable.complete",
+        "title": "Dynamic Timetable: Complete Task"
+      },
+      {
+        "command": "dynamicTimetable.interrupt",
+        "title": "Dynamic Timetable: Interrupt Task"
+      },
+      {
+        "command": "dynamicTimetable.refresh",
+        "title": "Dynamic Timetable: Refresh"
+      },
+      {
+        "command": "dynamicTimetable.pinFile",
+        "title": "Dynamic Timetable: Pin Current File"
+      },
+      {
+        "command": "dynamicTimetable.unpinFile",
+        "title": "Dynamic Timetable: Unpin File"
+      },
+      {
+        "command": "dynamicTimetable.insertTaskTemplate",
+        "title": "Dynamic Timetable: Insert Task Template"
+      },
+      {
+        "command": "dynamicTimetable.insertTaskTemplate1",
+        "title": "Dynamic Timetable: Insert Task Template 1"
+      },
+      {
+        "command": "dynamicTimetable.insertTaskTemplate2",
+        "title": "Dynamic Timetable: Insert Task Template 2"
+      },
+      {
+        "command": "dynamicTimetable.insertTaskTemplate3",
+        "title": "Dynamic Timetable: Insert Task Template 3"
+      },
+      {
+        "command": "dynamicTimetable.insertTaskTemplate4",
+        "title": "Dynamic Timetable: Insert Task Template 4"
+      },
+      {
+        "command": "dynamicTimetable.insertTaskTemplate5",
+        "title": "Dynamic Timetable: Insert Task Template 5"
+      },
+      {
+        "command": "dynamicTimetable.openSettings",
+        "title": "Dynamic Timetable: Open Settings"
+      }
+    ],
+    "configuration": [
+      {
+        "title": "Display",
+        "order": 0,
+        "properties": {
+          "dynamicTimetable.showEstimate": {
+            "description": "Show the Estimate column.",
+            "type": "boolean",
+            "default": false,
+            "order": 0
+          },
+          "dynamicTimetable.showStartTime": {
+            "description": "Show the Start column.",
+            "type": "boolean",
+            "default": false,
+            "order": 1
+          },
+          "dynamicTimetable.showEstimateInTaskName": {
+            "description": "Keep the estimate text in the displayed task name.",
+            "type": "boolean",
+            "default": false,
+            "order": 2
+          },
+          "dynamicTimetable.showStartTimeInTaskName": {
+            "description": "Keep the start time (e.g. @14:30) in the displayed task name.",
+            "type": "boolean",
+            "default": true,
+            "order": 3
+          },
+          "dynamicTimetable.showBufferTime": {
+            "description": "Show \"Buffer Time\" rows between tasks that have a gap.",
+            "type": "boolean",
+            "default": true,
+            "order": 4
+          },
+          "dynamicTimetable.showProgressBar": {
+            "description": "Show the progress bar of the current task.",
+            "type": "boolean",
+            "default": true,
+            "order": 5
+          },
+          "dynamicTimetable.showCompletedTasks": {
+            "description": "Show completed tasks (dimmed).",
+            "type": "boolean",
+            "default": true,
+            "order": 6
+          },
+          "dynamicTimetable.showRemainingTime": {
+            "description": "Show the remaining time instead of the estimate/start/end for the current task.",
+            "type": "boolean",
+            "default": true,
+            "order": 7
+          },
+          "dynamicTimetable.headerNames": {
+            "description": "Table header names: task, estimate, start, end.",
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 4,
+            "maxItems": 4,
+            "default": [
+              "Tasks",
+              "Estimate",
+              "Start",
+              "End"
+            ],
+            "order": 8
+          },
+          "dynamicTimetable.intervalTime": {
+            "description": "Refresh interval of the progress bar / remaining time (seconds).",
+            "type": "number",
+            "minimum": 0.2,
+            "default": 1,
+            "order": 9
+          },
+          "dynamicTimetable.enableOverdueNotice": {
+            "description": "Ask \"Are you finished?\" when the current task exceeds its estimate.",
+            "type": "boolean",
+            "default": true,
+            "order": 10
+          }
+        }
+      },
+      {
+        "title": "Task syntax",
+        "order": 1,
+        "properties": {
+          "dynamicTimetable.taskEstimateDelimiter": {
+            "description": "Single character that separates the task name from its estimate in minutes (e.g. `- [ ] Task ; 30`).",
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1,
+            "default": ";",
+            "order": 11
+          },
+          "dynamicTimetable.startTimeDelimiter": {
+            "description": "Single character that introduces an explicit start time (e.g. `@ 14:30`).",
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1,
+            "default": "@",
+            "order": 12
+          },
+          "dynamicTimetable.dateDelimiter": {
+            "description": "Regular expression of a line that marks the start of the next day (empty to disable).",
+            "type": "string",
+            "default": "",
+            "order": 13
+          },
+          "dynamicTimetable.showUntilRegex": {
+            "description": "Regular expression of a line at which parsing stops (empty to disable).",
+            "type": "string",
+            "default": "",
+            "order": 14
+          },
+          "dynamicTimetable.customUrlScheme": {
+            "description": "URL opened when a task is completed. Placeholders: {{minutes}}, {{seconds}}, {{taskName}} (of the next task). Only settable in user settings.",
+            "type": "string",
+            "default": "",
+            "scope": "application",
+            "order": 15
+          }
+        }
+      },
+      {
+        "title": "Categories",
+        "order": 2,
+        "properties": {
+          "dynamicTimetable.applyBackgroundColorByCategory": {
+            "description": "Color rows by their first #category.",
+            "type": "boolean",
+            "default": true,
+            "order": 16
+          },
+          "dynamicTimetable.showCategoryNamesInTask": {
+            "description": "Keep #category tags in the displayed task name.",
+            "type": "boolean",
+            "default": false,
+            "order": 17
+          },
+          "dynamicTimetable.categoryTransparency": {
+            "description": "Opacity of category background colors (0–1).",
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "default": 0.3,
+            "order": 18
+          },
+          "dynamicTimetable.categoryColorMap": {
+            "type": "object",
+            "default": {},
+            "markdownDescription": "Fixed colors per category, editable right here: key = category name (without `#`), value = color such as `#4caf50`. Merged with `#dynamicTimetable.categoryColors#`; that array wins on conflicts.",
+            "additionalProperties": {
+              "type": "string",
+              "pattern": "^#?[0-9a-fA-F]{6}$"
+            },
+            "order": 19
+          },
+          "dynamicTimetable.categoryColors": {
+            "description": "Fixed colors for categories. Others get automatic colors.",
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "category",
+                "color"
+              ],
+              "properties": {
+                "category": {
+                  "type": "string"
+                },
+                "color": {
+                  "type": "string",
+                  "pattern": "^#?[0-9a-fA-F]{6}$"
+                }
+              }
+            },
+            "default": [],
+            "order": 20
+          }
+        }
+      },
+      {
+        "title": "Behavior",
+        "order": 3,
+        "properties": {
+          "dynamicTimetable.autoSaveAfterUpdate": {
+            "type": "boolean",
+            "default": true,
+            "description": "Save the Markdown file after Complete / Interrupt so the start time survives restarts.",
+            "order": 21
+          },
+          "dynamicTimetable.targetLanguages": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "default": [
+              "markdown"
+            ],
+            "description": "Language IDs of files that can become the timetable target.",
+            "order": 22
+          }
+        }
+      },
+      {
+        "title": "Timestamps",
+        "order": 4,
+        "properties": {
+          "dynamicTimetable.enableTimestamps": {
+            "type": "boolean",
+            "default": true,
+            "description": "Record timestamps on the task line: (@done: …) when a task is completed or interrupted, and (@created: …) on tasks created from a template and on the remaining part of an interrupted task.",
+            "order": 23
+          },
+          "dynamicTimetable.timestampFormat": {
+            "type": "string",
+            "default": "YYYY-MM-DD HH:mm",
+            "maxLength": 40,
+            "description": "Format of the timestamps. Tokens: YYYY MM DD HH mm ss. Must not contain \")\".",
+            "order": 24
+          }
+        }
+      },
+      {
+        "title": "Task templates",
+        "order": 5,
+        "properties": {
+          "dynamicTimetable.taskTemplateMap": {
+            "type": "object",
+            "default": {},
+            "markdownDescription": "One-line task templates, editable right here: key = template name, value = task line in VS Code snippet syntax, e.g. `- [ ] ${1:Review} ; ${2:30} #work`. For multi-line templates use `#dynamicTimetable.taskTemplates#` (settings.json). Same-named entries there win. Used by **Dynamic Timetable: Insert Task Template**.",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "order": 25
+          },
+          "dynamicTimetable.taskTemplates": {
+            "type": "array",
+            "default": [],
+            "description": "Task templates for \"Insert Task Template\". `body` uses VS Code snippet syntax (e.g. ${1:30} tab stops, $CURRENT_HOUR). The task is inserted on the line after the current task. Slot commands 1–5 insert the Nth template.",
+            "items": {
+              "type": "object",
+              "required": [
+                "name",
+                "body"
+              ],
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "maxLength": 60,
+                  "description": "Unique name shown in the picker and usable as a keybinding argument."
+                },
+                "body": {
+                  "oneOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  ],
+                  "description": "Task line(s) in snippet syntax."
+                }
+              }
+            },
+            "defaultSnippets": [
+              {
+                "label": "Task template",
+                "body": {
+                  "name": "${1:name}",
+                  "body": [
+                    "- [ ] ${2:task} ; ${3:30} #${4:category}"
+                  ]
+                }
+              }
+            ],
+            "order": 26
+          }
+        }
+      }
+    ]
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/walterinsect/obsidian-dynamic-timetable"
+  },
+  "icon": "media/icon.png",
+  "keywords": [
+    "timetable",
+    "schedule",
+    "markdown",
+    "task",
+    "todo",
+    "time tracking",
+    "obsidian"
+  ],
+  "galleryBanner": {
+    "color": "#1e293b",
+    "theme": "dark"
+  },
+  "bugs": {
+    "url": "https://github.com/walterinsect/obsidian-dynamic-timetable/issues"
+  },
+  "homepage": "https://github.com/walterinsect/obsidian-dynamic-timetable#readme"
+}

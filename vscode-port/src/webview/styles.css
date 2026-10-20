@@ -1,0 +1,73 @@
+:root {
+  --dt-late: var(--vscode-errorForeground, #f14c4c);
+  --dt-on-time: var(--vscode-testing-iconPassed, #73c991);
+  --dt-muted: var(--vscode-descriptionForeground, #8b8b8b);
+  --dt-progress: var(--vscode-progressBar-background, #0e70c0);
+  --dt-overdue: var(--vscode-editorWarning-foreground, #e55a16);
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  color: var(--vscode-foreground);
+  background: var(--vscode-sideBar-background, var(--vscode-editor-background));
+  font-family: var(--vscode-font-family);
+  font-size: var(--vscode-font-size);
+}
+
+.dt-content { display: block; overflow: auto; max-height: 100vh; }
+
+.dt-task-row { vertical-align: middle; }
+.dt-task-row td, .dt-table th { padding: 4px 8px; }
+.dt-table th { text-align: center; color: var(--dt-muted); font-weight: 600; }
+.dt-table th:first-child, .dt-task-row td:first-child { text-align: left; }
+
+.late { color: var(--dt-late); }
+.on-time { color: var(--dt-on-time); }
+.dt-completed { opacity: 0.45; }
+.dt-buffer-time { color: var(--dt-muted); font-size: 0.9em; }
+
+.dt-progress-bar { height: 10px; width: 0; background-color: var(--dt-progress); transition: width 0.3s linear; }
+.dt-progress-bar-overdue { background-color: var(--dt-overdue); }
+.dt-progress-bar-container {
+  position: sticky; top: 0; z-index: 2;
+  background-color: var(--vscode-editor-background);
+}
+
+.dt-table { padding: 10px; margin: auto; width: 100%; border-spacing: 0; border-collapse: separate; }
+
+.dt-button-container { display: flex; position: sticky; top: 10px; z-index: 1; }
+.dt-button-container button { flex: 1; }
+.dt-button {
+  border: none; border-radius: 0; cursor: pointer; padding: 4px 0;
+  color: var(--vscode-button-secondaryForeground, var(--vscode-foreground));
+  background: var(--vscode-button-secondaryBackground, transparent);
+}
+.dt-button:hover { background: var(--vscode-button-secondaryHoverBackground, var(--vscode-toolbar-hoverBackground)); }
+.dt-button:focus-visible { outline: 1px solid var(--vscode-focusBorder); outline-offset: -1px; }
+
+.dt-warning {
+  padding: 6px 8px; margin: 4px 0;
+  color: var(--vscode-editorWarning-foreground, #cca700);
+  border-left: 3px solid currentColor;
+  background: var(--vscode-inputValidation-warningBackground, transparent);
+}
+.dt-empty { padding: 12px; color: var(--dt-muted); }
+
+/* ---- Statistics ---- */
+.st-root { padding: 8px 10px; }
+.st-legend { display: flex; flex-wrap: wrap; gap: 4px 14px; margin-bottom: 8px; color: var(--dt-muted); font-size: 0.9em; }
+.st-swatch { display: inline-block; width: 10px; height: 10px; margin-right: 4px; vertical-align: -1px; border: 1px solid var(--vscode-charts-blue, #3794ff); }
+.st-swatch-actual { background: var(--vscode-charts-blue, #3794ff); }
+.st-swatch-est { background: color-mix(in srgb, var(--vscode-charts-blue, #3794ff) 30%, transparent); }
+.st-row { display: grid; grid-template-columns: minmax(3em, 28%) 1fr auto; align-items: center; gap: 8px; padding: 3px 0; }
+.st-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.st-track { height: 14px; background: var(--vscode-editorWidget-background, transparent); border-radius: 2px; }
+.st-bar { display: flex; height: 100%; min-width: 2px; }
+.st-seg { display: block; min-width: 2px; border: 1px solid transparent; }
+.st-seg-est { border-style: dashed; }
+.st-seg:first-child { border-radius: 2px 0 0 2px; }
+.st-seg:last-child { border-radius: 0 2px 2px 0; }
+.st-seg:only-child { border-radius: 2px; }
+.st-value { color: var(--dt-muted); font-variant-numeric: tabular-nums; font-size: 0.9em; }
+.st-total { margin-top: 10px; padding-top: 6px; border-top: 1px solid var(--vscode-widget-border, var(--vscode-panel-border, transparent)); color: var(--dt-muted); font-size: 0.9em; }
