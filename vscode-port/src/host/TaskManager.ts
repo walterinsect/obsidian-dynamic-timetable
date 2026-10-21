@@ -1,7 +1,7 @@
 import { Task, TaskParser } from '../core/TaskParser';
 import { ApplyResult, applyTaskUpdate, updateStartTimeInYAML } from '../core/taskOps';
 import type { DynamicTimetableSettings } from '../core/types';
-import { InsertMode, TaskTemplate, buildInsertion, prepareBody } from '../core/templates';
+import { CursorPosition, InsertMode, TaskTemplate, buildInsertion, prepareBody } from '../core/templates';
 
 /** vscode.TextDocument を隠すための最小インターフェース。テストでは偽物を差す。 */
 export interface DocumentPort {
@@ -58,17 +58,17 @@ export class TaskManager {
   }
 
   /** テンプレートの挿入内容(位置とテキスト)を作る。ドキュメントは書き換えない。 */
-  planTemplate(port: DocumentPort, template: TaskTemplate, mode: InsertMode) {
+  planTemplate(port: DocumentPort, template: TaskTemplate, mode: InsertMode, cursor?: CursorPosition) {
     const settings = this.getSettings();
     const now = this.clock();
-    return buildInsertion(port.getText(), settings, prepareBody(template, settings, now), mode, now);
+    return buildInsertion(port.getText(), settings, prepareBody(template, settings, now), mode, now, cursor);
   }
 
   /** スニペットを既定値で展開して文書に直接挿入する(エディタが見えないとき用)。 */
-  insertTemplate(port: DocumentPort, template: TaskTemplate): Promise<{ offset: number }> {
+  insertTemplate(port: DocumentPort, template: TaskTemplate, cursor?: CursorPosition): Promise<{ offset: number }> {
     return this.serial(async () => {
       const content = port.getText();
-      const { offset, text } = this.planTemplate(port, template, 'plain');
+      const { offset, text } = this.planTemplate(port, template, 'plain', cursor);
       await port.replaceAll(content.slice(0, offset) + text + content.slice(offset));
       return { offset };
     });

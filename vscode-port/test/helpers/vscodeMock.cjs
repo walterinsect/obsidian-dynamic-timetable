@@ -60,6 +60,7 @@ function createVscode() {
   };
   // insertSnippet は受け取ったスニペット文字列をそのまま文書に入れる(タブ停止の展開は VS Code 側の機能なのでモックしない)
   const makeEditor = (doc) => ({ document: doc, viewColumn: 1,
+    get selection() { return { active: state.cursor || { line: 0, character: 0 } }; },
     insertSnippet: async (snip, pos) => {
       state.snippets.push({ value: snip.value, offset: pos.offset });
       if (!state.insertSnippetResult) return false;

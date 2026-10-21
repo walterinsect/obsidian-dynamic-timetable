@@ -30,15 +30,17 @@ export class TemplateCommands {
     if (!template) return;
 
     const port = new VscodeDocumentPort(doc, autoSave);
-    const editor = vscode.window.visibleTextEditors.find((e) => e.document === doc);
+    const active = vscode.window.activeTextEditor;
+    const editor = active && active.document === doc ? active : vscode.window.visibleTextEditors.find((e) => e.document === doc);
     if (editor) {
-      // 対象ファイルのエディタが見えている: スニペットとして挿入(タブ停止・変数が使える)
-      const { offset, text } = this.service.manager.planTemplate(port, template, 'snippet');
+      // 対象ファイルのエディタが見えている: カーソル位置へスニペットとして挿入(タブ停止・変数が使える)
+      const cursor = { line: editor.selection.active.line, character: editor.selection.active.character };
+      const { offset, text } = this.service.manager.planTemplate(port, template, 'snippet', cursor);
       const shown = await vscode.window.showTextDocument(doc, { viewColumn: editor.viewColumn, preserveFocus: false });
       const ok = await shown.insertSnippet(new vscode.SnippetString(text), doc.positionAt(offset));
       if (!ok) vscode.window.showErrorMessage('Dynamic Timetable: failed to insert the template.');
     } else {
-      // エディタが見えない(別タブ・サイドバーのみ等): 既定値で展開して文書に直接挿入
+      // エディタが見えない(別タブ・サイドバーのみ等): カーソルが無いので現在のタスクの次の行へ、既定値で展開して挿入
       await this.service.manager.insertTemplate(port, template);
     }
   }
@@ -55,7 +57,7 @@ export class TemplateCommands {
     }
     const picked = await vscode.window.showQuickPick(
       templates.map((t) => ({ label: t.name, description: t.body[0], detail: t.body.length > 1 ? `+${t.body.length - 1} more line(s)` : undefined, template: t })),
-      { placeHolder: 'Insert a task template after the current task', matchOnDescription: true }
+      { placeHolder: 'Insert a task template at the cursor', matchOnDescription: true }
     );
     return picked?.template;
   }

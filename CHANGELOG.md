@@ -4,6 +4,14 @@ English | [日本語](https://github.com/walterinsect/obsidian-dynamic-timetable
 
 All notable changes to the VS Code port of Dynamic Timetable. The original Obsidian plugin is by L7Cy (MIT).
 
+## 0.5.0
+### Changed
+- **Task templates are now inserted at the cursor** instead of always after the current task.
+  - Cursor on a line: the template goes on a new line below it (the line is never split). Indentation follows that line.
+  - Cursor on a blank line: the template is inserted in place, without an extra newline.
+  - Cursor inside the YAML front matter, or target editor not visible: falls back to the previous behavior (after the current task).
+- The template picker placeholder now reads "Insert a task template at the cursor".
+
 ## 0.4.0
 ### Added
 - Marketplace metadata: 128×128 PNG icon, categories (Productivity, Other), keywords, gallery banner, `bugs` and `homepage` links.

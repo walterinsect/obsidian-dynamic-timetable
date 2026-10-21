@@ -64,8 +64,8 @@ Define templates in `dynamicTimetable.taskTemplates`. `body` uses **VS Code snip
 ```
 
 - Commands: **Dynamic Timetable: Insert Task Template** (pick from a list) and **Insert Task Template 1–5** (insert the Nth template directly).
-- The template is inserted on the **line after the current task** (the first uncompleted task). If there is no current task, it goes after the last task line, or at the end of the file if there are no tasks.
-- If the editor of the target file is not visible, the template is inserted with its default values and without tab stops.
+- The template is inserted **at the cursor**: on a new line below the line the cursor is on (a line is never split), or in place if the cursor is on a blank line.
+- If the cursor is not usable (inside the YAML front matter), or the editor of the target file is not visible, the template goes on the line after the current task (the first uncompleted task). With no current task it goes after the last task line, or at the end of the file if there are no tasks. In the not-visible case it is inserted with default values and without tab stops.
 - When timestamps are enabled, each inserted task gets `(@created: …)`.
 
 No keybindings are assigned by default. Assign them in `keybindings.json`:

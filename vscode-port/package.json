@@ -23,7 +23,7 @@
   },
   "displayName": "Dynamic Timetable",
   "description": "Turn Markdown task lists with estimates into a live timetable (port of the Obsidian plugin).",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "publisher": "walterinsect",
   "license": "MIT",
   "engines": {
@@ -358,7 +358,7 @@
           "dynamicTimetable.taskTemplates": {
             "type": "array",
             "default": [],
-            "description": "Task templates for \"Insert Task Template\". `body` uses VS Code snippet syntax (e.g. ${1:30} tab stops, $CURRENT_HOUR). The task is inserted on the line after the current task. Slot commands 1–5 insert the Nth template.",
+            "description": "Task templates for \"Insert Task Template\". `body` uses VS Code snippet syntax (e.g. ${1:30} tab stops, $CURRENT_HOUR). The template is inserted at the cursor (a new line below the cursor line, or in place on a blank line); inside the front matter or when the editor is not visible it goes after the current task. Slot commands 1–5 insert the Nth template.",
             "items": {
               "type": "object",
               "required": [

@@ -195,6 +195,14 @@ export interface InsertionPlan {
   anchorLine: number | null;
   /** 基準行のインデント */
   indent: string;
+  /** true: カーソルが空行(空白のみの行)にあり、その位置へ改行なしで挿入する */
+  inline?: boolean;
+}
+
+/** エディタのカーソル位置(0 始まり)。 */
+export interface CursorPosition {
+  line: number;
+  character: number;
 }
 
 /**
@@ -202,8 +210,31 @@ export interface InsertionPlan {
  *  1. 現在のタスク(最初の未完了・見積りあり)の行末
  *  2. 現在のタスクが無ければ、最後のチェックボックス行の行末
  *  3. タスクが全く無ければ、ファイル末尾
+ *
+ * cursor を渡した場合はそちらを優先する(カーソル位置への挿入):
+ *  - カーソル行が空行(空白のみ): その位置にそのまま挿入(inline)
+ *  - それ以外: カーソル行の行末に改行して挿入(行の途中は割らない)
  */
-export const planInsertion = (content: string, settings: TplSettings): InsertionPlan => {
+export const planInsertion = (content: string, settings: TplSettings, cursor?: CursorPosition): InsertionPlan => {
+  if (cursor && Number.isInteger(cursor.line) && cursor.line >= 0) {
+    const rows = content.split('\n');
+    // YAML front matter 内のカーソルは無視する(挿入すると壊れるため、従来どおり現在のタスクの次の行へ)
+    let fmEnd = -1;
+    if (rows[0].replace(/\r$/, '') === '---') {
+      for (let i = 1; i < rows.length; i++) if (rows[i].replace(/\r$/, '') === '---') { fmEnd = i; break; }
+    }
+    if (cursor.line < rows.length && cursor.line > fmEnd) {
+      const line = rows[cursor.line].replace(/\r$/, '');
+      let start = 0;
+      for (let i = 0; i < cursor.line; i++) start += rows[i].length + 1;
+      const indent = /^[ \t]*/.exec(line)![0];
+      if (line.trim() === '') {
+        const col = Math.min(Math.max(cursor.character, 0), line.length);
+        return { offset: start + col, anchorLine: cursor.line, indent, inline: true };
+      }
+      return { offset: start + line.length, anchorLine: cursor.line, indent };
+    }
+  }
   const current = findCurrentTaskLine(content, settings);
   let anchor: number | null = current ? current.index : null;
   const parts = content.split('\n');
@@ -231,14 +262,17 @@ export const buildInsertion = (
   settings: TplSettings,
   lines: string[],
   mode: InsertMode,
-  now: Date
+  now: Date,
+  cursor?: CursorPosition
 ): { offset: number; text: string; plan: InsertionPlan } => {
-  const plan = planInsertion(content, settings);
+  const plan = planInsertion(content, settings, cursor);
   const eol = mode === 'plain' ? detectEol(content) : '\n';
   const body = mode === 'plain' ? lines.map((l) => expandSnippet(l, now)) : lines;
 
   let text: string;
-  if (plan.anchorLine !== null) {
+  if (plan.inline) {
+    text = (mode === 'plain' ? body.map((l, i) => (i === 0 ? l : plan.indent + l)) : body).join(eol);
+  } else if (plan.anchorLine !== null) {
     text = eol + (mode === 'plain' ? body.map((l) => plan.indent + l) : body).join(eol);
   } else if (content === '') {
     text = body.join(eol);

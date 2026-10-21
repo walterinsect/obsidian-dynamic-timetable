@@ -340,7 +340,7 @@ describe('extension integration (bundled dist/extension.js on a vscode mock)', (
     assert.deepEqual(env.state.executedArgs, ['dynamicTimetable.taskTemplates']);
   });
 
-  test('QuickPick lists templates; pick inserts the snippet AFTER the current task (editor visible)', async () => {
+  test('QuickPick lists templates; pick inserts the snippet (editor visible; cursor in front matter → after the current task)', async () => {
     load(); const doc = env.makeDoc(planDoc()); boot(doc, { taskTemplates: TPLS, enableTimestamps: false });
     env.state.quickPickPick = 'review';
     await cmd('dynamicTimetable.insertTaskTemplate')();
@@ -356,6 +356,34 @@ describe('extension integration (bundled dist/extension.js on a vscode mock)', (
     const cut = before.indexOf('- [ ] 現在 ; 30') + '- [ ] 現在 ; 30'.length;
     assert.equal(env.state.snippets[0].offset, cut);
     assert.ok(doc.text.indexOf('レビュー') > doc.text.indexOf('現在') && doc.text.indexOf('レビュー') < doc.text.indexOf('- [ ] 次'));
+  });
+
+  test('CURSOR: inserts after the line the cursor is on, not after the current task', async () => {
+    load(); const doc = env.makeDoc(planDoc()); boot(doc, { taskTemplates: TPLS, enableTimestamps: false });
+    const lineOf = (t) => doc.text.split('\n').findIndex((l) => l.startsWith(t));
+    env.state.cursor = { line: lineOf('- [ ] 次'), character: 3 }; // 「次」の行の途中
+    await cmd('dynamicTimetable.insertTaskTemplate')('break');
+    assert.equal(env.state.snippets[0].value, '\n- [ ] 休憩 ; 15 #life');
+    const l = doc.text.split('\n');
+    assert.deepEqual(l.slice(l.findIndex((x) => x.startsWith('- [ ] 現在'))).slice(0, 4), ['- [ ] 現在 ; 30', '- [ ] 次 ; 10', '- [ ] 休憩 ; 15 #life', '']);
+  });
+
+  test('CURSOR: on a blank line the template goes exactly there (no extra newline)', async () => {
+    load(); const doc = env.makeDoc(planDoc() + '\n');
+    boot(doc, { taskTemplates: TPLS, enableTimestamps: false });
+    env.state.cursor = { line: doc.text.split('\n').length - 1, character: 0 };
+    await cmd('dynamicTimetable.insertTaskTemplate')('break');
+    assert.equal(env.state.snippets[0].value, '- [ ] 休憩 ; 15 #life');
+    assert.ok(doc.text.endsWith('- [ ] 次 ; 10\n\n- [ ] 休憩 ; 15 #life') || doc.text.endsWith('- [ ] 次 ; 10\n- [ ] 休憩 ; 15 #life'), JSON.stringify(doc.text.slice(-40)));
+  });
+
+  test('CURSOR inside the front matter is ignored → falls back to after the current task', async () => {
+    load(); const doc = env.makeDoc(planDoc()); boot(doc, { taskTemplates: TPLS, enableTimestamps: false });
+    env.state.cursor = { line: 1, character: 2 };
+    await cmd('dynamicTimetable.insertTaskTemplate')('break');
+    const l = doc.text.split('\n');
+    assert.equal(l[0], '---'); assert.match(l[1], /^startTime: /);
+    assert.deepEqual(l.slice(3, 6), ['- [ ] 現在 ; 30', '- [ ] 休憩 ; 15 #life', '- [ ] 次 ; 10']);
   });
 
   test('editor is focused for tab stops: showTextDocument(viewColumn, preserveFocus:false)', async () => {
@@ -409,7 +437,7 @@ describe('extension integration (bundled dist/extension.js on a vscode mock)', (
 
   test('NO visible editor for the target → plain insertion with defaults, one edit, saved', async () => {
     load(); const doc = env.makeDoc(planDoc()); boot(doc, { taskTemplates: TPLS, enableTimestamps: false });
-    env.state.visibleTextEditors = [];
+    env.state.visibleTextEditors = []; env.state.activeTextEditor = undefined;
     await cmd('dynamicTimetable.insertTaskTemplate')('review');
     assert.equal(env.state.snippets.length, 0);
     assert.equal(env.state.applyEdits, 1); assert.equal(env.state.saves, 1);
@@ -419,7 +447,7 @@ describe('extension integration (bundled dist/extension.js on a vscode mock)', (
 
   test('plain insertion with autoSaveAfterUpdate=false stays dirty', async () => {
     load(); const doc = env.makeDoc(planDoc()); boot(doc, { taskTemplates: TPLS, autoSaveAfterUpdate: false });
-    env.state.visibleTextEditors = [];
+    env.state.visibleTextEditors = []; env.state.activeTextEditor = undefined;
     await cmd('dynamicTimetable.insertTaskTemplate')('break');
     assert.equal(env.state.saves, 0); assert.equal(doc.isDirty, true);
   });
