@@ -1,6 +1,6 @@
 # 変更履歴
 
-[English](https://github.com/walterinsect/obsidian-dynamic-timetable/blob/vscode-port/vscode-port/CHANGELOG.md) | 日本語
+[English](https://github.com/walterinsect/obsidian-dynamic-timetable/blob/vscode-port/CHANGELOG.md) | 日本語
 
 Dynamic Timetable の VS Code 移植版の主な変更点です。元の Obsidian プラグインは L7Cy 作(MIT)です。
 

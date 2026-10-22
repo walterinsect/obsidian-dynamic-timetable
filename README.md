@@ -1,6 +1,6 @@
 # Dynamic Timetable (VS Code)
 
-English | [日本語](https://github.com/walterinsect/obsidian-dynamic-timetable/blob/vscode-port/vscode-port/README.ja.md)
+English | [日本語](https://github.com/walterinsect/obsidian-dynamic-timetable/blob/vscode-port/README.ja.md)
 
 A VS Code extension that builds a timetable from the estimates in a Markdown task list.
 It is a port of [L7Cy/obsidian-dynamic-timetable](https://github.com/L7Cy/obsidian-dynamic-timetable) (MIT).
@@ -140,3 +140,7 @@ Snippet expansion is a VS Code feature, so please check the following in the rea
 - Dictionary-file integration (various-complements) is not ported.
 - Statistics uses a built-in bar chart instead of chart.js (tasks without a category are not counted; only their number is shown).
 - `customUrlScheme` is honored only in user settings (it is ignored in workspace settings).
+
+## License and attribution
+
+MIT License. This extension is derived from the Obsidian plugin [Dynamic Timetable](https://github.com/L7Cy/obsidian-dynamic-timetable) by L7Cy (Copyright (c) 2023 L7Cy); see [LICENSE.md](LICENSE.md) and [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) (including the Codicons CC BY 4.0 attribution).

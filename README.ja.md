@@ -1,6 +1,6 @@
 # Dynamic Timetable (VS Code)
 
-[English](https://github.com/walterinsect/obsidian-dynamic-timetable/blob/vscode-port/vscode-port/README.md) | 日本語
+[English](https://github.com/walterinsect/obsidian-dynamic-timetable/blob/vscode-port/README.md) | 日本語
 
 Markdown のタスクリストから、見積り時間に基づくタイムテーブルを作る VS Code 拡張です。
 [L7Cy/obsidian-dynamic-timetable](https://github.com/L7Cy/obsidian-dynamic-timetable)(MIT)の移植版です。
@@ -141,3 +141,7 @@ Timetable が認識するタスク行(見積りのあるチェックボックス
 - 辞書ファイル連携(various-complements)は未移植です。
 - Statistics は chart.js を使わない自前の棒グラフです(カテゴリ無しのタスクは集計対象外で、件数のみ表示します)。
 - `customUrlScheme` はユーザー設定のみ有効です(ワークスペース設定では無効)。
+
+## ライセンスと帰属表示
+
+MIT License。本拡張は L7Cy 氏の Obsidian プラグイン [Dynamic Timetable](https://github.com/L7Cy/obsidian-dynamic-timetable)(Copyright (c) 2023 L7Cy)の派生物です。[LICENSE.md](LICENSE.md) と [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)(Codicons の CC BY 4.0 表示を含む)を参照してください。
