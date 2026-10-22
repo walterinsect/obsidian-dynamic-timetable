@@ -1,5 +1,6 @@
 import { Task, TaskParser } from './TaskParser';
 import type { DynamicTimetableSettings } from './types';
+import { estNote, formatDuration } from './duration';
 import { DEFAULT_TIMESTAMP_FORMAT, extractStamps, formatTimestamp, stampSuffix } from './stamps';
 
 type OpSettings = Pick<
@@ -13,7 +14,7 @@ type OpSettings = Pick<
   | 'showUntilRegex'
   | 'enableTimestamps'
   | 'timestampFormat'
->;
+> & Partial<Pick<DynamicTimetableSettings, 'durationFormat'>>;
 
 const pad2 = (n: number) => String(n).padStart(2, '0');
 
@@ -99,7 +100,9 @@ export const findCurrentTaskLine = (content: string, settings: OpSettings): Curr
  * 書き換え対象が見つからなければ content は変更しない(startTime も触らない)。
  *
  * 打刻(settings.enableTimestamps): Interrupt の残りタスクに (@created: now) を付ける。
- * 完了行には何も追加しない((@done) は記録しない)。完了行の既存の刻印(旧版の @done を含む)は保持し、
+ * 完了行には打刻を追加しない((@done) は記録しない)。
+ *
+ * 完了行の書式: `; <実績> (est <元の見積り>) @ <実績開始>`(Complete のみ。例: `; 2h20m (est 2h)`)。完了行の既存の刻印(旧版の @done を含む)は保持し、
  * 無効時も失わない。
  */
 export const applyTaskUpdate = (
@@ -128,8 +131,14 @@ export const applyTaskUpdate = (
   const actualStart = new Date(now.getTime() - elapsed * 60000);
   const startText = settings.enableTimestamps ? formatTimestamp(actualStart, DEFAULT_TIMESTAMP_FORMAT) : formatHHMM(actualStart);
 
+  // 所要時間は 2h20m 形式(設定で分表記に戻せる)。Complete のときだけ元の見積りを (est …) で残す。
+  // Interrupt は完了ではなく分割なので、実績側に見積りは付けない(残りは次のタスクが引き受ける)。
+  const hm = settings.durationFormat !== 'minutes';
+  const elapsedText = hm ? formatDuration(elapsed) : String(elapsed);
+  const plannedMinutes = parseFloat(current.estimate!);
+  const noteText = mode === 'complete' && Number.isFinite(plannedMinutes) ? estNote(plannedMinutes, hm) : '';
   lines[idx] =
-    `${indent}${bullet} [x] ${name} ${delim} ${elapsed} ${startDelim} ${startText}${tagPart}` +
+    `${indent}${bullet} [x] ${name} ${delim} ${elapsedText}${noteText} ${startDelim} ${startText}${tagPart}` +
     stampSuffix({ created: existing.created, done: existing.done });
 
   let remainingMinutes: number | undefined;

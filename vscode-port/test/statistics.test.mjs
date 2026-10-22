@@ -20,7 +20,7 @@ describe('categoryPerformance / computeStatistics', () => {
     const s = S.computeStatistics(tasks);
     assert.deepEqual(s.rows.map((r) => [r.category, r.actual, r.estimated, r.total]), [['w', 20, 40, 60], ['p', 15, 10, 25]]);
     assert.equal(s.max, 60);
-    assert.deepEqual(s.totals, { actual: 35, estimated: 50 });
+    assert.deepEqual(s.totals, { actual: 35, estimated: 50, variance: null });
     assert.equal(s.uncategorized, 1);
   });
   test('ties are ordered by category name (stable display)', () => {
@@ -29,10 +29,10 @@ describe('categoryPerformance / computeStatistics', () => {
   });
   test('decimal estimates are summed as decimals', () => {
     const s = S.computeStatistics(parse('- [x] a ; 1.5 #w\n- [ ] b ; 0.25 #w'));
-    assert.deepEqual(s.rows[0], { category: 'w', actual: 1.5, estimated: 0.25, total: 1.75 });
+    assert.deepEqual(s.rows[0], { category: 'w', actual: 1.5, estimated: 0.25, total: 1.75, variance: null });
   });
   test('empty / no categories', () => {
-    assert.deepEqual(S.computeStatistics([]), { rows: [], max: 0, totals: { actual: 0, estimated: 0 }, uncategorized: 0 });
+    assert.deepEqual(S.computeStatistics([]), { rows: [], max: 0, totals: { actual: 0, estimated: 0, variance: null }, uncategorized: 0 });
     assert.equal(S.computeStatistics(parse('- [ ] a ; 5')).rows.length, 0);
   });
   test('TaskParser.getCategoryPerformance still delegates (back-compat)', () => {
@@ -45,10 +45,10 @@ describe('formatMinutes / barPercent', () => {
   test('formats', () => {
     assert.equal(S.formatMinutes(0), '0m');
     assert.equal(S.formatMinutes(45), '45m');
-    assert.equal(S.formatMinutes(60), '1h0m');
+    assert.equal(S.formatMinutes(60), '1h');
     assert.equal(S.formatMinutes(90), '1h30m');
     assert.equal(S.formatMinutes(1.5), '1.5m');
-    assert.equal(S.formatMinutes(61.25), '1h1.3m');
+    assert.equal(S.formatMinutes(61.25), '1h01.3m');
     assert.equal(S.formatMinutes(-5), '0m');
   });
   test('barPercent', () => {

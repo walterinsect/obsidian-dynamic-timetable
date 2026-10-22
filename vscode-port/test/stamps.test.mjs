@@ -102,13 +102,13 @@ describe('date-included actual start "@ YYYY-MM-DD HH:mm"', () => {
   });
   test('Complete writes it and the result round-trips through the parser', () => {
     const r = Ops.applyTaskUpdate(yaml() + '- [ ] A ; 30 #w\n- [ ] B ; 10', ON, today(9, 37), 'complete');
-    assert.match(lines(r.content)[3], new RegExp('^- \\[x\\] A ; 37 @ ' + D + ' 09:00 #w'));
+    assert.match(lines(r.content)[3], new RegExp('^- \\[x\\] A ; 37m \\(est 30m\\) @ ' + D + ' 09:00 #w'));
     const t = TaskParser.fromSettings(ON).filterAndParseTasks(r.content)[0];
     assert.equal(t.originalTaskName, 'A'); assert.equal(t.startTime.getHours(), 9); assert.equal(t.startTime.getMinutes(), 0);
   });
   test('custom timestampFormat does not change the start format (always parseable)', () => {
     const r = Ops.applyTaskUpdate(yaml() + '- [ ] A ; 30', S({ enableTimestamps: true, timestampFormat: 'HH:mm' }), today(9, 37), 'complete');
-    assert.match(lines(r.content)[3], new RegExp('^- \\[x\\] A ; 37 @ ' + D + ' 09:00$'));
+    assert.match(lines(r.content)[3], new RegExp('^- \\[x\\] A ; 37m \\(est 30m\\) @ ' + D + ' 09:00$'));
   });
 });
 
@@ -116,31 +116,31 @@ describe('applyTaskUpdate with timestamps', () => {
   test('feature OFF: no stamps are added and start is time-only', () => {
     const r = Ops.applyTaskUpdate(yaml() + '- [ ] A ; 30 #w', OFF, today(9, 25), 'complete');
     assert.ok(!r.content.includes('(@'), r.content);
-    assert.equal(lines(r.content)[3], '- [x] A ; 25 @ 09:00 #w');
+    assert.equal(lines(r.content)[3], '- [x] A ; 25m (est 30m) @ 09:00 #w');
   });
   test('complete: adds NO stamp at all (no @done), and no Created on a hand-written task', () => {
     const now = today(9, 37);
     const r = Ops.applyTaskUpdate(yaml() + '- [ ] A ; 30 #w', ON, now, 'complete');
-    assert.equal(lines(r.content)[3], `- [x] A ; 37 @ ${D} 09:00 #w`);
+    assert.equal(lines(r.content)[3], `- [x] A ; 37m (est 30m) @ ${D} 09:00 #w`);
   });
   test('complete: keeps an existing Created unchanged and adds nothing', () => {
     const now = today(9, 37);
     const r = Ops.applyTaskUpdate(yaml() + '- [ ] A ; 30 #w (@created: 2020-01-02 03:04)', ON, now, 'complete');
-    assert.equal(lines(r.content)[3], `- [x] A ; 37 @ ${D} 09:00 #w (@created: 2020-01-02 03:04)`);
+    assert.equal(lines(r.content)[3], `- [x] A ; 37m (est 30m) @ ${D} 09:00 #w (@created: 2020-01-02 03:04)`);
   });
   test('REGRESSION: stamp no longer ends up between the name and ";"', () => {
     const r = Ops.applyTaskUpdate(yaml() + '- [ ] A ; 30 (@created: 2020-01-02 03:04)', ON, today(9, 10), 'complete');
-    assert.match(lines(r.content)[3], new RegExp('^- \\[x\\] A ; 10 @ ' + D + ' 09:00 \\(@created: 2020-01-02 03:04\\)$'));
+    assert.match(lines(r.content)[3], new RegExp('^- \\[x\\] A ; 10m \\(est 30m\\) @ ' + D + ' 09:00 \\(@created: 2020-01-02 03:04\\)$'));
   });
   test('complete with feature OFF still preserves an existing Created (no data loss)', () => {
     const r = Ops.applyTaskUpdate(yaml() + '- [ ] A ; 30 (@created: 2020-01-02 03:04)', OFF, today(9, 10), 'complete');
-    assert.equal(lines(r.content)[3], '- [x] A ; 10 @ 09:00 (@created: 2020-01-02 03:04)');
+    assert.equal(lines(r.content)[3], '- [x] A ; 10m (est 30m) @ 09:00 (@created: 2020-01-02 03:04)');
   });
   test('INTERRUPT: the done line gets NO @done; the remaining task gets Created = interrupt time (not the original)', () => {
     const now = today(9, 25);
     const r = Ops.applyTaskUpdate(yaml() + '- [ ] Deep ; 60 #w (@created: 2020-01-02 03:04)\n- [ ] Next ; 5', ON, now, 'interrupt');
     const l = lines(r.content);
-    assert.equal(l[3], `- [x] Deep ; 25 @ ${D} 09:00 #w (@created: 2020-01-02 03:04)`);
+    assert.equal(l[3], `- [x] Deep ; 25m @ ${D} 09:00 #w (@created: 2020-01-02 03:04)`);
     assert.equal(l[4], `- [ ] Deep ; 35 #w (@created: ${ymd(now)} 09:25)`);
     assert.equal(l[5], '- [ ] Next ; 5');
   });
@@ -163,7 +163,7 @@ describe('applyTaskUpdate with timestamps', () => {
     const c = '---\r\nstartTime: 09:00:00\r\n---\r\n  * [ ] A ; 30 #w\r\n';
     const r = Ops.applyTaskUpdate(c, ON, today(9, 10), 'complete');
     assert.ok(!/(^|[^\r])\n/.test(r.content));
-    assert.match(lines(r.content)[3], new RegExp('^  \\* \\[x\\] A ; 10 @ ' + D + ' 09:00 #w$'));
+    assert.match(lines(r.content)[3], new RegExp('^  \\* \\[x\\] A ; 10m \\(est 30m\\) @ ' + D + ' 09:00 #w$'));
   });
   test('result re-parses: completed, name clean, next task found', () => {
     const r = Ops.applyTaskUpdate(yaml() + '- [ ] A ; 30 #w\n- [ ] B ; 10', ON, today(9, 10), 'complete');
@@ -181,7 +181,7 @@ describe('applyTaskUpdate with timestamps', () => {
   });
   test('REGRESSION: custom startTimeDelimiter is used when writing the actual start', () => {
     const r = Ops.applyTaskUpdate(yaml() + '- [ ] A | 30', S({ taskEstimateDelimiter: '|', startTimeDelimiter: '$' }), today(9, 10), 'complete');
-    assert.equal(lines(r.content)[3], `- [x] A | 10 $ ${D} 09:00`);
+    assert.equal(lines(r.content)[3], `- [x] A | 10m (est 30m) $ ${D} 09:00`);
     const t = TaskParser.fromSettings(S({ taskEstimateDelimiter: '|', startTimeDelimiter: '$' })).filterAndParseTasks(r.content)[0];
     assert.equal(t.originalStartTime, true);
   });

@@ -93,7 +93,7 @@ describe('TaskManager', () => {
     const r = await new TaskManager(S, () => at(9, 20)).complete(port);
     assert.equal(port.writes, 1);
     assert.equal(r.elapsedMinutes, 20);
-    assert.ok(port.text.includes('- [x] A ; 20 @ ' + DD + ' 09:00'), port.text);
+    assert.ok(port.text.includes('- [x] A ; 20m (est 30m) @ ' + DD + ' 09:00'), port.text);
     assert.ok(port.text.startsWith('---\nstartTime: 09:20:00\n---\n'));
   });
   test('complete: nothing to do → no write', async () => {
@@ -123,7 +123,7 @@ describe('TaskManager', () => {
     const port = fakePort('---\nstartTime: 09:00:00\n---\n- [ ] Deep ; 60 #w');
     const r = await new TaskManager(S, () => at(9, 20)).interrupt(port);
     assert.equal(r.remainingMinutes, 40);
-    assert.ok(port.text.includes('- [x] Deep ; 20 @ ' + DD + ' 09:00 #w\n- [ ] Deep ; 40 #w (@created: ' + DD + ' 09:20)'), port.text);
+    assert.ok(port.text.includes('- [x] Deep ; 20m @ ' + DD + ' 09:00 #w\n- [ ] Deep ; 40 #w (@created: ' + DD + ' 09:20)'), port.text);
   });
 });
 

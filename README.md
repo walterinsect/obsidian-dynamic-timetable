@@ -14,7 +14,7 @@ startTime: 09:00:00
 - [ ] Implementation ; 90 #work
 ```
 
-- The number after `;` is the estimate in minutes, the time after `@` is an explicit start time, and `#` marks a category.
+- The value after `;` is the estimate: minutes (`90`), or `45m`, `2h`, `2h20m`, `1.5h`. The time after `@` is an explicit start time, and `#` marks a category.
 - Open **Dynamic Timetable** in the Activity Bar to see the timetable (Timetable) and the per-category totals (Statistics) for the active Markdown file.
 - Statistics shows a stacked bar per `#category`: actual (completed) and remaining (estimated). Colors are shared with the Timetable.
 - Commands: Show Timetable / Show Statistics / Complete Task / Interrupt Task / Refresh / Pin Current File / Open Settings
@@ -27,7 +27,7 @@ startTime: 09:00:00
 
 ```markdown
 - [ ] Implementation ; 60 #work (@created: 2026-10-21 09:12)                       <- created from a template
-- [x] Implementation ; 37 @ 2026-10-21 09:12 #work (@created: 2026-10-21 09:12)   <- after Complete (no stamp is added)
+- [x] Implementation ; 37m (est 1h) @ 2026-10-21 09:12 #work (@created: 2026-10-21 09:12)   <- after Complete (no stamp is added)
 ```
 
 | Action | What is recorded |
@@ -40,6 +40,21 @@ startTime: 09:00:00
 - Created is never added to hand-written tasks.
 - `(@done: …)` was written by versions before 0.8.0. It is no longer written, but it is still read, ignored for the name/estimate/categories, and kept as it is when a line is rewritten.
 - Stamps do not affect how the task name, estimate or categories are read. Turning the feature off does not remove existing stamps.
+
+## Estimate vs. actual
+
+Completing a task keeps **both** numbers on the line, written as hours and minutes so you can read the duration at a glance:
+
+```markdown
+- [ ] Implementation ; 2h #work                                   <- before
+- [x] Implementation ; 2h20m (est 2h) @ 2026-10-21 09:12 #work    <- after Complete
+```
+
+- After `;` is the **actual** time; `(est …)` is the **original estimate**. Minutes are zero-padded after hours (`1h05m`), whole hours are `2h`, and under an hour it is `45m`.
+- Interrupt splits the task: the finished part gets the elapsed time (no `(est …)`, since the task is not finished), and the remainder carries on as a normal estimate.
+- Where the difference (actual − estimate) is shown: the Timetable (a badge such as `+20m` in red when over, `-10m` in green when under, with a tooltip), the Statistics view (per category and in the total, completed tasks that have `(est …)`), and the editor (`(est …)` is highlighted with the estimate color).
+- `dynamicTimetable.durationFormat`: `hm` (default, `2h20m`) or `minutes` (`140 (est 120)`). Both forms are always readable.
+- Lines completed by earlier versions have no `(est …)`; they are left as they are and simply show no difference.
 
 ## Settings UI
 

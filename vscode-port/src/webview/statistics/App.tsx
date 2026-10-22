@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react';
+import { formatVariance } from '../../core/duration';
 import { barPercent, computeStatistics, formatMinutes } from '../../core/statistics';
 import { setAlpha } from '../../core/timetable';
 import { useHostState } from '../useHostState';
@@ -26,7 +27,7 @@ export const App = () => {
             const base = colors[r.category];
             const solid = base ? setAlpha(base, 1) : FALLBACK;
             const faded = base ? setAlpha(base, 0.3) : FALLBACK;
-            const label = `${r.category}: ${formatMinutes(r.actual)} done, ${formatMinutes(r.estimated)} remaining`;
+            const label = `${r.category}: ${formatMinutes(r.actual)} done, ${formatMinutes(r.estimated)} remaining${r.variance !== null ? `, ${formatVariance(r.variance)} vs estimate` : ''}`;
             return (
               <div className="st-row" role="listitem" aria-label={label} title={label} key={r.category}>
                 <div className="st-label">{r.category}</div>
@@ -38,7 +39,10 @@ export const App = () => {
                     )}
                   </div>
                 </div>
-                <div className="st-value">{formatMinutes(r.actual)} / {formatMinutes(r.estimated)}</div>
+                <div className="st-value">
+                  {formatMinutes(r.actual)} / {formatMinutes(r.estimated)}
+                  {r.variance !== null && <span className={`dt-variance ${r.variance > 0.5 ? 'dt-variance-over' : r.variance < -0.5 ? 'dt-variance-under' : ''}`}>{formatVariance(r.variance)}</span>}
+                </div>
               </div>
             );
           })}
@@ -48,6 +52,7 @@ export const App = () => {
       {stats.rows.length > 0 && (
         <div className="st-total">
           Total: {formatMinutes(stats.totals.actual)} done · {formatMinutes(stats.totals.estimated)} remaining
+          {stats.totals.variance !== null && <> · {formatVariance(stats.totals.variance)} vs estimate (completed tasks with an estimate)</>}
           {stats.uncategorized > 0 && <> · {stats.uncategorized} uncategorized task{stats.uncategorized > 1 ? 's' : ''} not counted</>}
         </div>
       )}

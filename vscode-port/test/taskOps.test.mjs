@@ -53,7 +53,7 @@ describe('applyTaskUpdate: complete', () => {
   const now = at(9, 25, 30); // elapsed 25 min
   test('marks first uncompleted done with elapsed + actual start; bumps startTime', () => {
     const r = Ops.applyTaskUpdate(yaml() + '- [ ] Write ; 30 #w\n- [ ] Next ; 10', S, now, 'complete');
-    assert.deepEqual(lines(r.content), ['---', 'startTime: 09:25:30', '---', '- [x] Write ; 25 @ 09:00 #w', '- [ ] Next ; 10', '']
+    assert.deepEqual(lines(r.content), ['---', 'startTime: 09:25:30', '---', '- [x] Write ; 25m (est 30m) @ 09:00 #w', '- [ ] Next ; 10', '']
       .slice(0, 5));
     assert.equal(r.elapsedMinutes, 25);
     assert.equal(r.next.task, 'Next');
@@ -61,15 +61,15 @@ describe('applyTaskUpdate: complete', () => {
   test('skips already-completed lines', () => {
     const r = Ops.applyTaskUpdate(yaml() + '- [x] Old ; 5 @ 08:00\n- [ ] Cur ; 30', S, now, 'complete');
     assert.ok(r.content.includes('- [x] Old ; 5 @ 08:00'));
-    assert.ok(r.content.includes('- [x] Cur ; 25 @ 09:00'));
+    assert.ok(r.content.includes('- [x] Cur ; 25m (est 30m) @ 09:00'));
   });
   test('REGRESSION: ISO start time on the task line', () => {
     const r = Ops.applyTaskUpdate(yaml() + '- [ ] A ; 30 @ 2026-10-21T09:00', S, now, 'complete');
-    assert.ok(r.content.includes('- [x] A ; 25 @ 09:00'), r.content);
+    assert.ok(r.content.includes('- [x] A ; 25m (est 30m) @ 09:00'), r.content);
   });
   test('REGRESSION: indented task keeps its indent', () => {
     const r = Ops.applyTaskUpdate(yaml() + '  - [ ] A ; 30', S, now, 'complete');
-    assert.ok(r.content.includes('  - [x] A ; 25 @ 09:00'), r.content);
+    assert.ok(r.content.includes('  - [x] A ; 25m (est 30m) @ 09:00'), r.content);
   });
   test('REGRESSION: * and + bullets', () => {
     assert.ok(Ops.applyTaskUpdate(yaml() + '* [ ] A ; 30', S, now, 'complete').content.includes('* [x] A ; 25'));
@@ -77,11 +77,11 @@ describe('applyTaskUpdate: complete', () => {
   });
   test('multiple tags, tag before start, links preserved', () => {
     const r = Ops.applyTaskUpdate(yaml() + '- [ ] See [[Note]] ; 30 #w #deep', S, now, 'complete');
-    assert.ok(r.content.includes('- [x] See [[Note]] ; 25 @ 09:00 #w #deep'), r.content);
+    assert.ok(r.content.includes('- [x] See [[Note]] ; 25m (est 30m) @ 09:00 #w #deep'), r.content);
   });
   test('Japanese names and tags', () => {
     const r = Ops.applyTaskUpdate(yaml() + '- [ ] 資料作成 ; 30 #仕事', S, now, 'complete');
-    assert.ok(r.content.includes('- [x] 資料作成 ; 25 @ 09:00 #仕事'), r.content);
+    assert.ok(r.content.includes('- [x] 資料作成 ; 25m (est 30m) @ 09:00 #仕事'), r.content);
   });
   test('result re-parses as completed and chain continues', () => {
     const r = Ops.applyTaskUpdate(yaml() + '- [ ] A ; 30\n- [ ] B ; 10', S, now, 'complete');
@@ -94,7 +94,7 @@ describe('applyTaskUpdate: complete', () => {
     const c = '---\r\nstartTime: 09:00:00\r\n---\r\n- [ ] A ; 30\r\n';
     const r = Ops.applyTaskUpdate(c, S, now, 'complete');
     assert.ok(!/(^|[^\r])\n/.test(r.content), JSON.stringify(r.content));
-    assert.ok(r.content.includes('- [x] A ; 25 @ 09:00\r\n'));
+    assert.ok(r.content.includes('- [x] A ; 25m (est 30m) @ 09:00\r\n'));
   });
   test('no uncompleted task → content untouched', () => {
     const c = yaml() + '- [x] A ; 5 @ 08:00';
@@ -111,7 +111,7 @@ describe('applyTaskUpdate: complete', () => {
   });
   test('custom estimate delimiter', () => {
     const r = Ops.applyTaskUpdate(yaml() + '- [ ] A | 30', { ...S, taskEstimateDelimiter: '|' }, now, 'complete');
-    assert.ok(r.content.includes('- [x] A | 25 @ 09:00'), r.content);
+    assert.ok(r.content.includes('- [x] A | 25m (est 30m) @ 09:00'), r.content);
   });
 });
 
@@ -119,7 +119,7 @@ describe('applyTaskUpdate: interrupt', () => {
   test('splits into done(elapsed) + remaining', () => {
     const r = Ops.applyTaskUpdate(yaml() + '- [ ] Deep ; 60 #w\n- [ ] Next ; 5', S, at(9, 20), 'interrupt');
     const l = lines(r.content);
-    assert.equal(l[3], '- [x] Deep ; 20 @ 09:00 #w');
+    assert.equal(l[3], '- [x] Deep ; 20m @ 09:00 #w');
     assert.equal(l[4], '- [ ] Deep ; 40 #w');
     assert.equal(l[5], '- [ ] Next ; 5');
     assert.equal(r.remainingMinutes, 40);

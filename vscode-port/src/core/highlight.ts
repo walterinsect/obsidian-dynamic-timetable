@@ -5,6 +5,7 @@
  */
 import type { TaskParser } from './TaskParser';
 import { findStamps } from './stamps';
+import { DURATION_PATTERN, findEstNotes } from './duration';
 
 export type HighlightKind = 'tag' | 'estimate' | 'start' | 'created' | 'completed';
 
@@ -22,7 +23,7 @@ const TAG_RE = /\s#([^\s!#$%&'()*+,.\/:;<=>?@[\\\]^`{|}~]+)/gu;
 
 export const computeHighlights = (parser: TaskParser, content: string): HighlightRange[] => {
   const { separator, startTimeDelimiter } = parser.delimiters;
-  const estimateRe = new RegExp(`\\${separator}\\s*\\d+(?:\\.\\d+)?`);
+  const estimateRe = new RegExp(`\\${separator}\\s*${DURATION_PATTERN}`);
   const startRe = new RegExp(`\\${startTimeDelimiter}\\s*(?:\\d{4}-\\d{2}-\\d{2}[T ]\\s*)?\\d{1,2}:?\\d{2}`);
   const out: HighlightRange[] = [];
 
@@ -33,6 +34,11 @@ export const computeHighlights = (parser: TaskParser, content: string): Highligh
       // 旧版が書いた (@done: …) は読み飛ばすだけ(強調しない)。位置は下で空白に置き換える
       if (st.kind === 'created') out.push({ kind: 'created', line: index, start: st.start, end: st.end });
       masked = masked.slice(0, st.start) + ' '.repeat(st.end - st.start) + masked.slice(st.end);
+    }
+    // 完了行の見積り注記 (est 2h) も見積りの色で塗る(位置を保つため空白に置き換えて以降の検索から外す)
+    for (const note of findEstNotes(text)) {
+      out.push({ kind: 'estimate', line: index, start: note.start, end: note.end });
+      masked = masked.slice(0, note.start) + ' '.repeat(note.end - note.start) + masked.slice(note.end);
     }
     const est = estimateRe.exec(masked);
     if (est) out.push({ kind: 'estimate', line: index, start: est.index, end: est.index + est[0].length });

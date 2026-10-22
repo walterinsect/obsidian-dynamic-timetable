@@ -2,6 +2,8 @@
  * 打刻: タスク行末尾の `(@created: 値)`。旧版が書いた `(@done: 値)` も読み取り・保持はするが、新しくは書かない。
  * 値は書式化済みの文字列をそのまま保持する(再書式化しない)。
  */
+import { stripEstNotes } from './duration';
+
 export const DEFAULT_TIMESTAMP_FORMAT = 'YYYY-MM-DD HH:mm';
 
 const STAMP_RE = /[ \t]*\(@(created|done):[ \t]*([^)\r\n]*?)[ \t]*\)/g;
@@ -38,6 +40,9 @@ export const extractStamps = (line: string): Stamps & { text: string } => {
 /** 刻印だけを取り除く(パーサ用)。刻印が無ければ入力をそのまま返す。 */
 export const stripStamps = (line: string): string =>
   line.includes('(@') ? extractStamps(line).text : line;
+
+/** 刻印と見積り注記 `(est …)` を取り除く(パーサ用)。 */
+export const stripAnnotations = (line: string): string => stripEstNotes(stripStamps(line));
 
 const pad = (n: number, w = 2) => String(n).padStart(w, '0');
 

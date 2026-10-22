@@ -96,7 +96,7 @@ describe('extension integration (bundled dist/extension.js on a vscode mock)', (
     assert.equal(env.state.applyEdits, 1);
     assert.equal(env.state.saves, 1);
     assert.equal(doc.isDirty, false);
-    assert.match(doc.text, /- \[x\] A ; 20 @ \d{4}-\d\d-\d\d \d\d:\d\d #w$/m);
+    assert.match(doc.text, /- \[x\] A ; 20m \(est 30m\) @ \d{4}-\d\d-\d\d \d\d:\d\d #w$/m);
     assert.match(doc.text, /- \[ \] B ; 10/);
     assert.ok(posted.length > before, 'refreshed after complete');
     assert.equal(lastUpdate(posted).tasks[0].isCompleted, true);
@@ -120,7 +120,7 @@ describe('extension integration (bundled dist/extension.js on a vscode mock)', (
     load(); const doc = env.makeDoc(`---\nstartTime: ${hms(minutesAgo(15))}\n---\n- [ ] Deep ; 60`);
     const { handlers } = boot(doc);
     await handlers.msg({ type: 'interrupt' });
-    assert.match(doc.text, /- \[x\] Deep ; 15 @ \d{4}-\d\d-\d\d \d\d:\d\d\n- \[ \] Deep ; 45 \(@created: /);
+    assert.match(doc.text, /- \[x\] Deep ; 15m @ \d{4}-\d\d-\d\d \d\d:\d\d\n- \[ \] Deep ; 45 \(@created: /);
   });
 
   test('complete with nothing to do → info message, document untouched', async () => {
@@ -685,13 +685,13 @@ describe('extension integration (bundled dist/extension.js on a vscode mock)', (
     load(); const on = env.makeDoc(`---\nstartTime: ${hms(minutesAgo(10))}\n---\n- [ ] A ; 30 #w`);
     const a = boot(on);
     await a.handlers.msg({ type: 'complete' });
-    assert.match(on.text, /- \[x\] A ; 10 @ \d{4}-\d\d-\d\d \d\d:\d\d #w$/m);
+    assert.match(on.text, /- \[x\] A ; 10m \(est 30m\) @ \d{4}-\d\d-\d\d \d\d:\d\d #w$/m);
     assert.ok(!on.text.includes('(@'), on.text);
     load(); const off = env.makeDoc(`---\nstartTime: ${hms(minutesAgo(10))}\n---\n- [ ] A ; 30 #w`);
     const b = boot(off, { enableTimestamps: false });
     await b.handlers.msg({ type: 'complete' });
     assert.ok(!off.text.includes('(@'));
-    assert.match(off.text, /- \[x\] A ; 10 @ \d\d:\d\d #w$/m);
+    assert.match(off.text, /- \[x\] A ; 10m \(est 30m\) @ \d\d:\d\d #w$/m);
   });
 
   test('Interrupt: the done line gets no @done, the remaining task has Created (interrupt time)', async () => {
@@ -699,7 +699,7 @@ describe('extension integration (bundled dist/extension.js on a vscode mock)', (
     const { handlers } = boot(doc, { enableTimestamps: true });
     await handlers.msg({ type: 'interrupt' });
     const l = doc.text.split('\n');
-    assert.match(l[3], /^- \[x\] Deep ; 15 @ \d{4}-\d\d-\d\d \d\d:\d\d #w \(@created: 2020-01-02 03:04\)$/);
+    assert.match(l[3], /^- \[x\] Deep ; 15m @ \d{4}-\d\d-\d\d \d\d:\d\d #w \(@created: 2020-01-02 03:04\)$/);
     assert.match(l[4], /^- \[ \] Deep ; 45 #w \(@created: \d{4}-\d\d-\d\d \d\d:\d\d\)$/);
     assert.ok(!l[4].includes('2020-01-02'), 'remaining task must NOT inherit the original Created');
   });

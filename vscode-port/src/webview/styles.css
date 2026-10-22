@@ -71,3 +71,8 @@ body {
 .st-seg:only-child { border-radius: 2px; }
 .st-value { color: var(--dt-muted); font-variant-numeric: tabular-nums; font-size: 0.9em; }
 .st-total { margin-top: 10px; padding-top: 6px; border-top: 1px solid var(--vscode-widget-border, var(--vscode-panel-border, transparent)); color: var(--dt-muted); font-size: 0.9em; }
+
+/* 見積りと実績の差(完了行)。超過は赤、短縮は緑 */
+.dt-variance { margin-left: 6px; font-size: 0.85em; opacity: 0.9; white-space: nowrap; }
+.dt-variance-over { color: var(--vscode-charts-red, #f14c4c); }
+.dt-variance-under { color: var(--vscode-charts-green, #89d185); }

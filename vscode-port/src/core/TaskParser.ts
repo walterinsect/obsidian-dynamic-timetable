@@ -1,6 +1,7 @@
 import type { DynamicTimetableSettings } from './types';
 import { categoryPerformance } from './statistics';
-import { stripStamps } from './stamps';
+import { stripAnnotations } from './stamps';
+import { DURATION_PATTERN, extractPlannedMinutes, parseDuration } from './duration';
 
 export interface Task {
   originalTaskName: string;
@@ -11,6 +12,8 @@ export interface Task {
   isCompleted: boolean;
   originalStartTime: boolean;
   categories: string[];
+  /** 完了行の見積り注記 `(est 2h)` の分数。無ければ null/未定義 */
+  plannedMinutes?: number | null;
 }
 
 export class TaskParser {
@@ -131,6 +134,7 @@ export class TaskParser {
             isCompleted: isCompleted,
             originalStartTime: originalStartTime,
             categories: categories,
+            plannedMinutes: extractPlannedMinutes(task),
           });
         }
 
@@ -173,12 +177,12 @@ export class TaskParser {
     taskName: string;
     originalTaskName: string;
   } {
-    taskName = stripStamps(taskName);
+    taskName = stripAnnotations(taskName);
     const taskNameRegex = /^[-+*]\s*\[\s*.\s*\]\s*/;
     const linkRegex = /\[\[([^\[\]]*\|)?([^\[\]]+)\]\]/g;
     const markdownLinkRegex = /\[([^\[\]]+)\]\(.+?\)/g;
     const estimateRegex = new RegExp(
-      `\\${this.separator}\\s*\\d+(?:\\.\\d+)?\\s*`
+      `\\${this.separator}\\s*${DURATION_PATTERN}\\s*`
     );
     const startTimeRegex = new RegExp(
       `\\${this.startTimeDelimiter}\\s*(?:\\d{4}-\\d{2}-\\d{2}[T ]\\s*)?(\\d{1,2}:?\\d{2})`
@@ -221,7 +225,7 @@ export class TaskParser {
   }
 
   public parseStartTime(task: string, nextDay: number): Date | null {
-    task = stripStamps(task);
+    task = stripAnnotations(task);
     const timeRegex = new RegExp(
       `\\${this.startTimeDelimiter}\\s*(\\d{1,2}:?\\d{2})`
     );
@@ -262,16 +266,20 @@ export class TaskParser {
   }
 
   public parseEstimate(task: string): string | null {
-    task = stripStamps(task);
+    task = stripAnnotations(task);
     const regex = new RegExp(
-      `\\${this.separator}\\s*(\\d+(?:\\.\\d+)?)\\s*`
+      `\\${this.separator}\\s*(${DURATION_PATTERN})\\s*`
     );
     const match = task.match(regex);
-    return match ? match[1] : null;
+    if (!match) return null;
+    // 裸の数値は表記のまま(従来どおり)、2h20m 形式は分に換算した文字列
+    if (/^\d+(?:\.\d+)?$/.test(match[1])) return match[1];
+    const minutes = parseDuration(match[1]);
+    return minutes === null ? null : String(minutes);
   }
 
   private parseCategories(taskName: string): string[] {
-    taskName = stripStamps(taskName);
+    taskName = stripAnnotations(taskName);
     const tagRegex = /\s#([^\s!#$%&'()*+,.\/:;<=>?@[\\\]^`{|}~]+)/gu;
     const categories = [];
     let match;

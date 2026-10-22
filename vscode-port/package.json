@@ -23,7 +23,7 @@
   },
   "displayName": "Dynamic Timetable",
   "description": "Turn Markdown task lists with estimates into a live timetable (port of the Obsidian plugin).",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "publisher": "walterinsect",
   "license": "MIT",
   "engines": {
@@ -239,6 +239,20 @@
             "default": "",
             "scope": "application",
             "order": 15
+          },
+          "dynamicTimetable.durationFormat": {
+            "type": "string",
+            "enum": [
+              "hm",
+              "minutes"
+            ],
+            "enumDescriptions": [
+              "Hours and minutes, e.g. 2h20m (minutes are zero-padded after hours: 1h05m).",
+              "Plain minutes, e.g. 140."
+            ],
+            "default": "hm",
+            "description": "How the elapsed time and the original estimate are written on a completed task line: `; 2h20m (est 2h)` or `; 140 (est 120)`. Both forms (and 45m, 2h, 1.5h) can always be read.",
+            "order": 16
           }
         }
       },
@@ -250,13 +264,13 @@
             "description": "Color rows by their first #category.",
             "type": "boolean",
             "default": true,
-            "order": 16
+            "order": 17
           },
           "dynamicTimetable.showCategoryNamesInTask": {
             "description": "Keep #category tags in the displayed task name.",
             "type": "boolean",
             "default": false,
-            "order": 17
+            "order": 18
           },
           "dynamicTimetable.categoryTransparency": {
             "description": "Opacity of category background colors (0–1).",
@@ -264,7 +278,7 @@
             "minimum": 0,
             "maximum": 1,
             "default": 0.3,
-            "order": 18
+            "order": 19
           },
           "dynamicTimetable.categoryColorMap": {
             "type": "object",
@@ -274,7 +288,7 @@
               "type": "string",
               "pattern": "^#?[0-9a-fA-F]{6}$"
             },
-            "order": 19
+            "order": 20
           },
           "dynamicTimetable.categoryColors": {
             "description": "Fixed colors for categories. Others get automatic colors.",
@@ -296,7 +310,7 @@
               }
             },
             "default": [],
-            "order": 20
+            "order": 21
           }
         }
       },
@@ -308,7 +322,7 @@
             "type": "boolean",
             "default": true,
             "description": "Save the Markdown file after Complete / Interrupt so the start time survives restarts.",
-            "order": 21
+            "order": 22
           },
           "dynamicTimetable.targetLanguages": {
             "type": "array",
@@ -319,13 +333,13 @@
               "markdown"
             ],
             "description": "Language IDs of files that can become the timetable target.",
-            "order": 22
+            "order": 23
           },
           "dynamicTimetable.showProgressInStatusBar": {
             "type": "boolean",
             "default": true,
             "description": "Show the number of recognized tasks, completed tasks and the completion rate (%) in the status bar. Counts the same tasks that the timetable shows.",
-            "order": 23
+            "order": 24
           }
         }
       },
@@ -337,14 +351,14 @@
             "type": "boolean",
             "default": true,
             "description": "Record a creation timestamp (@created: …) on tasks created from a template and on the remaining part of an interrupted task. Completing a task adds no stamp.",
-            "order": 24
+            "order": 25
           },
           "dynamicTimetable.timestampFormat": {
             "type": "string",
             "default": "YYYY-MM-DD HH:mm",
             "maxLength": 40,
             "description": "Format of the timestamps. Tokens: YYYY MM DD HH mm ss. Must not contain \")\".",
-            "order": 25
+            "order": 26
           }
         }
       },
@@ -359,7 +373,7 @@
             "additionalProperties": {
               "type": "string"
             },
-            "order": 26
+            "order": 27
           },
           "dynamicTimetable.taskTemplates": {
             "type": "array",
@@ -404,7 +418,7 @@
                 }
               }
             ],
-            "order": 27
+            "order": 28
           }
         }
       },
@@ -416,7 +430,7 @@
             "type": "boolean",
             "default": true,
             "description": "Highlight tags, estimates, start times and (@created) stamps on the task lines the timetable recognizes, and dim completed tasks.",
-            "order": 28
+            "order": 29
           },
           "dynamicTimetable.highlightOpacity": {
             "type": "number",
@@ -424,7 +438,7 @@
             "minimum": 0,
             "maximum": 1,
             "description": "Opacity (0–1) of the highlight backgrounds. Applies to tag colors (the category colors) and to colors in highlightColors written as #RRGGBB.",
-            "order": 29
+            "order": 30
           },
           "dynamicTimetable.highlightColors": {
             "type": "object",
@@ -448,7 +462,7 @@
               }
             },
             "additionalProperties": false,
-            "order": 30
+            "order": 31
           },
           "dynamicTimetable.completedTaskOpacity": {
             "type": "number",
@@ -456,7 +470,7 @@
             "minimum": 0.1,
             "maximum": 1,
             "description": "Opacity of completed task lines in the editor (1 = do not dim).",
-            "order": 31
+            "order": 32
           }
         }
       }

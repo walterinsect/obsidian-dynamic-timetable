@@ -23,4 +23,6 @@ export interface DynamicTimetableSettings {
   enableTimestamps: boolean;
   /** 打刻の書式(YYYY MM DD HH mm ss) */
   timestampFormat: string;
+  /** 完了行の所要時間の書式: 'hm' = 2h20m / 'minutes' = 140 */
+  durationFormat: 'hm' | 'minutes';
 }

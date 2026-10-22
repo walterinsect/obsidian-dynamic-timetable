@@ -1,5 +1,7 @@
 import React from 'react';
 import type { Task } from '../../core/TaskParser';
+import { formatDuration, formatVariance } from '../../core/duration';
+import { taskVariance } from '../../core/statistics';
 import {
   ViewSettings,
   fadeColor,
@@ -33,6 +35,13 @@ export const TaskRow = ({
   const style = settings.applyBackgroundColorByCategory && bg ? { backgroundColor: bg } : {};
 
   const showRemaining = settings.showRemainingTime && isCurrent;
+  // 完了行: 実績を 2h20m 形式で、見積り注記 (est …) があれば差異(実績 − 見積り)を添える
+  const variance = taskVariance(task);
+  const estimateText = task.isCompleted && task.estimate && Number.isFinite(parseFloat(task.estimate)) ? formatDuration(parseFloat(task.estimate)) : task.estimate;
+  const varianceTitle =
+    variance !== null && task.plannedMinutes != null
+      ? `Estimated ${formatDuration(task.plannedMinutes)}, actual ${estimateText} (${formatVariance(variance)})`
+      : undefined;
   const remainingSeconds = Math.floor((estimateMs - durationMs) / 1000);
 
   return (
@@ -43,7 +52,12 @@ export const TaskRow = ({
     >
       <td>{task.task}</td>
       {settings.showEstimate && !showRemaining && (
-        <td style={{ textAlign: 'center' }}>{task.estimate}</td>
+        <td style={{ textAlign: 'center' }} title={varianceTitle}>
+          {estimateText}
+          {variance !== null && (
+            <span className={`dt-variance ${variance > 0.5 ? 'dt-variance-over' : variance < -0.5 ? 'dt-variance-under' : ''}`}>{formatVariance(variance)}</span>
+          )}
+        </td>
       )}
       {settings.showStartTime && !showRemaining && (
         <td style={{ textAlign: 'center' }}>{task.startTime ? formatDateToTime(task.startTime) : ''}</td>

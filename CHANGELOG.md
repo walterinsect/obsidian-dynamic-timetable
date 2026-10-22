@@ -4,6 +4,19 @@ English | [日本語](https://github.com/walterinsect/obsidian-dynamic-timetable
 
 All notable changes to the VS Code port of Dynamic Timetable. The original Obsidian plugin is by L7Cy (MIT).
 
+## 0.9.0
+### Added
+- **Estimate and actual are both kept** on a completed line: `; 2h20m (est 2h) @ …`. After `;` is the actual time, `(est …)` is the original estimate. Interrupt writes only the elapsed time on the finished part.
+- **Readable durations**: elapsed and estimated times are written as `45m`, `2h`, `1h05m`, `2h20m` (minutes zero-padded after hours). New setting `durationFormat` (`hm` default, or `minutes`).
+- **Variance (actual − estimate) is shown** in the Timetable (colored `+20m` / `-10m` badge with a tooltip), in Statistics (per category and total) and in the editor (`(est …)` is highlighted).
+- The estimate after `;` accepts `45m`, `2h`, `2h20m`, `1.5h` as well as plain minutes.
+
+### Changed
+- Statistics durations use the same zero-padded style (`1h` instead of `1h0m`, `1h05m` instead of `1h5m`).
+
+### Compatibility
+- Lines completed by earlier versions are not converted; they have no `(est …)` and show no variance. A hand-written `; 2h` used to mean 2 minutes and now means 2 hours.
+
 ## 0.8.0
 ### Removed
 - **The `(@done: …)` stamp is no longer written.** Complete and Interrupt add nothing to the completed line; the only stamp written is `(@created: …)` (template-created tasks and the remaining part of an interrupted task).

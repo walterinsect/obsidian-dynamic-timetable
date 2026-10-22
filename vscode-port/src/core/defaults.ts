@@ -25,6 +25,7 @@ export const DEFAULT_SETTINGS: DynamicTimetableSettings = {
   showUntilRegex: '',
   enableTimestamps: true,
   timestampFormat: DEFAULT_TIMESTAMP_FORMAT,
+  durationFormat: 'hm',
 };
 
 const HEX = /^#?[0-9a-fA-F]{6}$/;
@@ -83,5 +84,6 @@ export const sanitizeSettings = (raw: Record<string, unknown>): DynamicTimetable
     showUntilRegex: str('showUntilRegex', true),
     enableTimestamps: bool('enableTimestamps'),
     timestampFormat: isValidTimestampFormat(raw.timestampFormat) ? raw.timestampFormat : d.timestampFormat,
+    durationFormat: raw.durationFormat === 'minutes' || raw.durationFormat === 'hm' ? raw.durationFormat : d.durationFormat,
   };
 };
