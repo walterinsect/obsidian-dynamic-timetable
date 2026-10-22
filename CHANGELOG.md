@@ -4,6 +4,15 @@ English | [日本語](https://github.com/walterinsect/obsidian-dynamic-timetable
 
 All notable changes to the VS Code port of Dynamic Timetable. The original Obsidian plugin is by L7Cy (MIT).
 
+## 0.6.0
+### Added
+- **Task progress in the status bar** (left side, next to the pinned-file item): `$(checklist) done/total (percent%)`, e.g. `3/8 (38%)`.
+  - Counts the tasks the timetable recognizes (same rules: bullets, indentation, `showUntilRegex`, date delimiters), including completed ones.
+  - The percentage is rounded to an integer; a file without tasks shows "No tasks" instead of 0%.
+  - Updates on edits (debounced), when the active file changes, on settings changes, and after Complete/Interrupt. Hidden when there is no target Markdown file.
+  - Tooltip shows the counts and file name; clicking opens the timetable.
+  - New setting `dynamicTimetable.showProgressInStatusBar` (default on).
+
 ## 0.5.0
 ### Changed
 - **Task templates are now inserted at the cursor** instead of always after the current task.

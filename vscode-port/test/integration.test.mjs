@@ -518,6 +518,66 @@ describe('extension integration (bundled dist/extension.js on a vscode mock)', (
     assert.ok(env.state.messages.some((m) => m.kind === 'error' && /failed to insert/.test(m.text)));
   });
 
+  // ---------------- Status bar: task progress ----------------
+  describe('status bar progress', () => {
+    const items = () => env.state.statusItems || [];
+    const progressItem = () => items().find((i) => i.priority === -1);
+    const flush = () => new Promise((r) => setTimeout(r, 400));
+    const body = (extra = '') => `---\nstartTime: ${hms(minutesAgo(30))}\n---\n- [x] A ; 10\n- [ ] B ; 10\n- [ ] C ; 10\n${extra}`;
+
+    test('shown on the left (after the pin item) with count / done / percent, clicking opens the timetable', async () => {
+      load(); env.state.statusItems = []; const doc = env.makeDoc(body()); boot(doc);
+      await flush();
+      const it = progressItem();
+      assert.equal(it.align, 1); assert.equal(it.shown, true);
+      assert.equal(it.text, '$(checklist) 1/3 (33%)');
+      assert.equal(it.command, 'dynamicTimetable.show');
+      assert.match(it.tooltip, /Tasks: 3 · Completed: 1 · Completion: 33%/);
+    });
+
+    test('updates when the document changes', async () => {
+      load(); env.state.statusItems = []; const doc = env.makeDoc(body()); boot(doc); await flush();
+      doc.text = doc.text.replace('- [ ] B', '- [x] B');
+      env.state.emit.changeDoc.fire({ document: doc, contentChanges: [{}] }); await flush();
+      assert.equal(progressItem().text, '$(checklist) 2/3 (67%)');
+    });
+
+    test('updates through the view: Complete changes the numbers', async () => {
+      load(); env.state.statusItems = []; const doc = env.makeDoc(body()); const { handlers } = boot(doc); await flush();
+      await handlers.msg({ type: 'complete' });
+      env.state.emit.changeDoc.fire({ document: doc, contentChanges: [{}] }); await flush();
+      assert.equal(progressItem().text, '$(checklist) 2/3 (67%)');
+    });
+
+    test('hidden by the setting, and re-shown when it is turned back on', async () => {
+      load(); env.state.statusItems = []; const doc = env.makeDoc(body()); boot(doc, { showProgressInStatusBar: false }); await flush();
+      assert.equal(progressItem().shown, false);
+      env.state.config.showProgressInStatusBar = true;
+      env.state.emit.changeConfig.fire({ affectsConfiguration: () => true }); await flush();
+      assert.equal(progressItem().shown, true); assert.equal(progressItem().text, '$(checklist) 1/3 (33%)');
+    });
+
+    test('no target document → hidden; file without tasks → "No tasks"', async () => {
+      load(); env.state.statusItems = []; boot(undefined); await flush();
+      assert.ok(!progressItem().shown);
+      load(); env.state.statusItems = []; boot(env.makeDoc('# only text')); await flush();
+      assert.equal(progressItem().text, '$(checklist) No tasks');
+    });
+
+    test('rapid edits are coalesced and the latest state wins', async () => {
+      load(); env.state.statusItems = []; const doc = env.makeDoc(body()); boot(doc); await flush();
+      for (let i = 0; i < 5; i++) env.state.emit.changeDoc.fire({ document: doc, contentChanges: [{}] });
+      doc.text += '- [x] D ; 5\n';
+      env.state.emit.changeDoc.fire({ document: doc, contentChanges: [{}] }); await flush();
+      assert.equal(progressItem().text, '$(checklist) 2/4 (50%)');
+    });
+
+    test('the pin item and the progress item coexist (different priorities)', async () => {
+      load(); env.state.statusItems = []; boot(env.makeDoc(body())); await flush();
+      assert.deepEqual(items().map((i) => i.priority).sort(), [-1, 0]);
+    });
+  });
+
   // ---------------- Timestamps (Complete / Interrupt through the view) ----------------
   test('Complete: DEFAULT settings write date-time start + (@done: …); explicit OFF writes time-only, no stamps', async () => {
     load(); const on = env.makeDoc(`---\nstartTime: ${hms(minutesAgo(10))}\n---\n- [ ] A ; 30 #w`);

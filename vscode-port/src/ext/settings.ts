@@ -17,6 +17,7 @@ export const readSettings = (): DynamicTimetableSettings => {
 
 export interface ExtensionOptions {
   autoSave: boolean;
+  showProgressInStatusBar: boolean;
   targetLanguages: string[];
   taskTemplates: TaskTemplate[];
   /** 無視した不正なテンプレートの理由(利用時に警告する) */
@@ -33,6 +34,7 @@ export const readOptions = (): ExtensionOptions => {
     taskTemplates: templates,
     templateProblems: problems,
     autoSave: cfg.get<boolean>('autoSaveAfterUpdate', true) !== false,
+    showProgressInStatusBar: cfg.get<boolean>('showProgressInStatusBar', true) !== false,
     targetLanguages:
       Array.isArray(langs) && langs.every((l) => typeof l === 'string' && l) && langs.length
         ? (langs as string[])

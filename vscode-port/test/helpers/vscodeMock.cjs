@@ -27,7 +27,7 @@ function createVscode() {
       showQuickPick: async (items, opts) => { state.quickPicks.push({ items, opts }); return items.find((i) => i.label === state.quickPickPick); },
       showTextDocument: async (doc, opts) => { state.shown.push({ doc, opts }); return state.visibleTextEditors.find((e) => e.document === doc); },
       showInformationMessage: msg('info'), showWarningMessage: msg('warn'), showErrorMessage: msg('error'),
-      createStatusBarItem: () => ({ show() { this.shown = true; }, hide() { this.shown = false; }, dispose() {} }),
+      createStatusBarItem: (align, priority) => { const it = { align, priority, shown: false, text: '', show() { this.shown = true; }, hide() { this.shown = false; }, dispose() {} }; (state.statusItems = state.statusItems || []).push(it); return it; },
       registerWebviewViewProvider: (type, p, opts) => { state.providers.set(type, { p, opts }); return { dispose() {} }; },
     },
     workspace: {

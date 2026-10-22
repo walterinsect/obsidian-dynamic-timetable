@@ -18,7 +18,7 @@ describe('package.json consistency', () => {
     }
   });
   test('no contributed setting is unknown to the code', () => {
-    const known = new Set([...Object.keys(DEFAULT_SETTINGS), 'autoSaveAfterUpdate', 'targetLanguages', 'taskTemplates', 'taskTemplateMap', 'categoryColorMap']);
+    const known = new Set([...Object.keys(DEFAULT_SETTINGS), 'autoSaveAfterUpdate', 'targetLanguages', 'taskTemplates', 'showProgressInStatusBar', 'taskTemplateMap', 'categoryColorMap']);
     for (const key of Object.keys(props)) assert.ok(known.has(key.replace('dynamicTimetable.', '')), key);
   });
   test('contributed defaults survive sanitizeSettings unchanged (schema ⊂ validator)', () => {

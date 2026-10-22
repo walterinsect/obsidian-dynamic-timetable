@@ -5,6 +5,7 @@ import { TimetableService } from './ext/TimetableService';
 import { TimetableProvider } from './ext/TimetableProvider';
 import { StatisticsProvider } from './ext/StatisticsProvider';
 import { TemplateCommands } from './ext/TemplateCommands';
+import { formatProgressText, formatProgressTooltip, summarizeTasks } from './core/progress';
 import { SECTION, readOptions, readSettings } from './ext/settings';
 
 export function activate(ctx: vscode.ExtensionContext): void {
@@ -27,6 +28,27 @@ export function activate(ctx: vscode.ExtensionContext): void {
     } else status.hide();
   };
 
+  // タスク集計(認識数・完了数・完了率)。Timetable に表示されるタスクと同じ範囲を数える。
+  const progress = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, -1);
+  progress.command = 'dynamicTimetable.show';
+  let progressSeq = 0;
+  let progressTimer: ReturnType<typeof setTimeout> | undefined;
+  const updateProgress = async () => {
+    const seq = ++progressSeq;
+    const port = service.port();
+    if (!port || !readOptions().showProgressInStatusBar) return void progress.hide();
+    const { tasks } = await manager.loadTasks(port);
+    if (seq !== progressSeq) return; // より新しい更新が走っている
+    const summary = summarizeTasks(tasks);
+    progress.text = formatProgressText(summary);
+    progress.tooltip = formatProgressTooltip(summary, target.document ? vscode.workspace.asRelativePath(target.document.uri) : undefined);
+    progress.show();
+  };
+  const scheduleProgress = (delay = 150) => {
+    clearTimeout(progressTimer);
+    progressTimer = setTimeout(() => void updateProgress().catch(() => progress.hide()), delay);
+  };
+
   const webviewOptions = { webviewOptions: { retainContextWhenHidden: true } };
   ctx.subscriptions.push(
     target,
@@ -36,12 +58,19 @@ export function activate(ctx: vscode.ExtensionContext): void {
     target.onDidChange(() => {
       updateStatus();
       refreshAll(0);
+      scheduleProgress(0);
     }),
     vscode.workspace.onDidChangeTextDocument((e) => {
-      if (target.document && e.document === target.document && e.contentChanges.length) refreshAll();
+      if (target.document && e.document === target.document && e.contentChanges.length) {
+        refreshAll();
+        scheduleProgress();
+      }
     }),
     vscode.workspace.onDidChangeConfiguration((e) => {
-      if (e.affectsConfiguration(SECTION)) refreshAll(0);
+      if (e.affectsConfiguration(SECTION)) {
+        refreshAll(0);
+        scheduleProgress(0);
+      }
     }),
     vscode.commands.registerCommand('dynamicTimetable.complete', () => timetable.complete()),
     vscode.commands.registerCommand('dynamicTimetable.interrupt', () => timetable.interrupt()),
@@ -69,7 +98,9 @@ export function activate(ctx: vscode.ExtensionContext): void {
       'dynamicTimetable.insertTaskTemplate5',
     ].map((id, i) => vscode.commands.registerCommand(id, () => templates.insert(i + 1)))
   );
+  ctx.subscriptions.push(progress, { dispose: () => clearTimeout(progressTimer) });
   updateStatus();
+  scheduleProgress(0);
 }
 
 export function deactivate(): void {}

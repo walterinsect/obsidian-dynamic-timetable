@@ -18,6 +18,7 @@ startTime: 09:00:00
 - Open **Dynamic Timetable** in the Activity Bar to see the timetable (Timetable) and the per-category totals (Statistics) for the active Markdown file.
 - Statistics shows a stacked bar per `#category`: actual (completed) and remaining (estimated). Colors are shared with the Timetable.
 - Commands: Show Timetable / Show Statistics / Complete Task / Interrupt Task / Refresh / Pin Current File / Open Settings
+- The status bar shows task progress, e.g. `3/8 (38%)`: recognized tasks, completed tasks and the completion rate. It counts the same tasks the timetable shows, updates as you edit, and opens the timetable when clicked. Turn it off with `dynamicTimetable.showProgressInStatusBar`.
 - Complete and Interrupt rewrite the file and update `startTime` to the current time. By default the file is also saved.
 
 ## Timestamps (Created / Done)

@@ -23,7 +23,7 @@
   },
   "displayName": "Dynamic Timetable",
   "description": "Turn Markdown task lists with estimates into a live timetable (port of the Obsidian plugin).",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "publisher": "walterinsect",
   "license": "MIT",
   "engines": {
@@ -320,6 +320,12 @@
             ],
             "description": "Language IDs of files that can become the timetable target.",
             "order": 22
+          },
+          "dynamicTimetable.showProgressInStatusBar": {
+            "type": "boolean",
+            "default": true,
+            "description": "Show the number of recognized tasks, completed tasks and the completion rate (%) in the status bar. Counts the same tasks that the timetable shows.",
+            "order": 23
           }
         }
       },
@@ -331,14 +337,14 @@
             "type": "boolean",
             "default": true,
             "description": "Record timestamps on the task line: (@done: …) when a task is completed or interrupted, and (@created: …) on tasks created from a template and on the remaining part of an interrupted task.",
-            "order": 23
+            "order": 24
           },
           "dynamicTimetable.timestampFormat": {
             "type": "string",
             "default": "YYYY-MM-DD HH:mm",
             "maxLength": 40,
             "description": "Format of the timestamps. Tokens: YYYY MM DD HH mm ss. Must not contain \")\".",
-            "order": 24
+            "order": 25
           }
         }
       },
@@ -353,7 +359,7 @@
             "additionalProperties": {
               "type": "string"
             },
-            "order": 25
+            "order": 26
           },
           "dynamicTimetable.taskTemplates": {
             "type": "array",
@@ -398,7 +404,7 @@
                 }
               }
             ],
-            "order": 26
+            "order": 27
           }
         }
       }
