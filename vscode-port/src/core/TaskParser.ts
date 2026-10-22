@@ -189,7 +189,9 @@ export class TaskParser {
     );
     const categoryRegex = /\s#([^\s!#$%&'()*+,.\/:;<=>?@[\\\]^`{|}~]+)/gu;
 
-    let originalTaskName = taskName;
+    // タグは `- [ ] #tag title` のようにチェックボックス直後にも書かれる。接頭辞を外す前に取り除いて、
+    // 直前の空白を失わないようにする(外した後だと `\s#` に一致せず、先頭のタグが名前に残る)
+    let originalTaskName = taskName.replace(categoryRegex, '');
     originalTaskName = originalTaskName
       .replace(taskNameRegex, '')
       .replace(estimateRegex, '')
@@ -197,6 +199,7 @@ export class TaskParser {
       .replace(categoryRegex, '')
       .trim();
 
+    if (!this.showCategoryNamesInTask) taskName = taskName.replace(categoryRegex, '');
     taskName = taskName
       .replace(taskNameRegex, '')
       .trim()
@@ -205,6 +208,7 @@ export class TaskParser {
       .trim();
 
     if (!this.showCategoryNamesInTask) {
+      // 先頭のタグも消せるよう、接頭辞を外す前の文字列から取り除いてやり直す
       taskName = taskName.replace(categoryRegex, '').trim();
     }
 

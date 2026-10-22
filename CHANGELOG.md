@@ -12,6 +12,8 @@ All notable changes to the VS Code port of Dynamic Timetable. The original Obsid
 - The estimate after `;` accepts `45m`, `2h`, `2h20m`, `1.5h` as well as plain minutes.
 
 ### Changed
+- **Tags are no longer moved or copied** when a task is completed or interrupted. The line is rewritten in place: only the estimate (`; 30`) and the start time (`@ …`) change, so `- [ ] #work title ; 30` stays `#work title`. Applies to the remaining task of an Interrupt as well.
+- Tags written right after the checkbox (`- [ ] #tag title`) are now stripped from the task name, so they no longer show up in the name when `showCategoryNamesInTask` is off.
 - Statistics durations use the same zero-padded style (`1h` instead of `1h0m`, `1h05m` instead of `1h5m`).
 
 ### Compatibility

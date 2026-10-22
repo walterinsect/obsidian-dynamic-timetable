@@ -1,6 +1,6 @@
 import { Task, TaskParser } from './TaskParser';
 import type { DynamicTimetableSettings } from './types';
-import { estNote, formatDuration } from './duration';
+import { DURATION_PATTERN, estNote, formatDuration, stripEstNotes } from './duration';
 import { DEFAULT_TIMESTAMP_FORMAT, extractStamps, formatTimestamp, stampSuffix } from './stamps';
 
 type OpSettings = Pick<
@@ -55,7 +55,35 @@ export const getElapsedMinutes = (
 };
 
 const TASK_LINE = /^(\s*)([-+*])\s*\[ \]\s*/;
-const TAG_RE = /\s#([^\s!#$%&'()*+,.\/:;<=>?@[\\\]^`{|}~]+)/gu;
+
+/**
+ * タスク行を「その場」で書き換える。見積り(; 30)と開始時刻(@ 09:00)の部分だけを置き換え、
+ * タグ・リンク・本文など他の文字は元の位置のまま残す(タグを行末へ移さない)。
+ *  - est: 見積り部分の置換テキスト
+ *  - start: 開始時刻部分の置換テキスト。undefined なら既存の開始時刻を取り除く。
+ *    文字列で、既存の開始時刻が無いときは見積りの直後に挿入する。
+ */
+const rewriteInPlace = (
+  rest: string,
+  o: { sep: string; startDelim: string; est: string; start?: string }
+): string => {
+  const estRe = new RegExp(`\\${o.sep}\\s*${DURATION_PATTERN}`);
+  const startRe = new RegExp(`\\${o.startDelim}\\s*(?:\\d{4}-\\d{2}-\\d{2}[T ]\\s*)?\\d{1,2}:?\\d{2}`);
+  const e = estRe.exec(rest);
+  let s = startRe.exec(rest);
+  if (e && s && s.index < e.index + e[0].length && s.index + s[0].length > e.index) s = null; // 重なりは無視
+  const edits: { from: number; to: number; text: string }[] = [];
+  if (e) edits.push({ from: e.index, to: e.index + e[0].length, text: o.est + (s || o.start === undefined ? '' : ` ${o.startDelim} ${o.start}`) });
+  if (s) {
+    if (o.start === undefined) {
+      const lead = /[ \t]*$/.exec(rest.slice(0, s.index))![0].length;
+      edits.push({ from: s.index - lead, to: s.index + s[0].length, text: '' });
+    } else edits.push({ from: s.index, to: s.index + s[0].length, text: `${o.startDelim} ${o.start}` });
+  }
+  let out = rest;
+  for (const ed of edits.sort((a, b) => b.from - a.from)) out = out.slice(0, ed.from) + ed.text + out.slice(ed.to);
+  return out;
+};
 
 export interface ApplyResult {
   content: string;
@@ -124,10 +152,9 @@ export const applyTaskUpdate = (
 
   const line = lines[idx];
   const existing = extractStamps(line);
-  const [, indent, bullet] = line.match(TASK_LINE)!;
-  const name = parser.parseTaskName(line.trim()).originalTaskName;
-  const tags = [...existing.text.matchAll(TAG_RE)].map((m) => `#${m[1]}`).join(' ');
-  const tagPart = tags ? ` ${tags}` : '';
+  const [prefix, indent, bullet] = line.match(TASK_LINE)!;
+  // 打刻と見積り注記を除いた本文。タグなどはここに元の位置のまま残る
+  const rest = stripEstNotes(existing.text).slice(prefix.length);
   const actualStart = new Date(now.getTime() - elapsed * 60000);
   const startText = settings.enableTimestamps ? formatTimestamp(actualStart, DEFAULT_TIMESTAMP_FORMAT) : formatHHMM(actualStart);
 
@@ -138,7 +165,8 @@ export const applyTaskUpdate = (
   const plannedMinutes = parseFloat(current.estimate!);
   const noteText = mode === 'complete' && Number.isFinite(plannedMinutes) ? estNote(plannedMinutes, hm) : '';
   lines[idx] =
-    `${indent}${bullet} [x] ${name} ${delim} ${elapsedText}${noteText} ${startDelim} ${startText}${tagPart}` +
+    `${indent}${bullet} [x] ` +
+    rewriteInPlace(rest, { sep: delim, startDelim, est: `${delim} ${elapsedText}${noteText}`, start: startText }) +
     stampSuffix({ created: existing.created, done: existing.done });
 
   let remainingMinutes: number | undefined;
@@ -147,7 +175,8 @@ export const applyTaskUpdate = (
     if (remaining > 0) {
       remainingMinutes = remaining;
       // 残りは新しいタスク: Created は元の値ではなく中断した時刻
-      lines.splice(idx + 1, 0, `${indent}${bullet} [ ] ${name} ${delim} ${remaining}${tagPart}` + stampSuffix({ created: stampNow }));
+      const remainder = rewriteInPlace(rest, { sep: delim, startDelim, est: `${delim} ${remaining}` });
+      lines.splice(idx + 1, 0, `${indent}${bullet} [ ] ${remainder}` + stampSuffix({ created: stampNow }));
     }
   }
 

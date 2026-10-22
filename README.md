@@ -54,6 +54,7 @@ Completing a task keeps **both** numbers on the line, written as hours and minut
 - Interrupt splits the task: the finished part gets the elapsed time (no `(est …)`, since the task is not finished), and the remainder carries on as a normal estimate.
 - Where the difference (actual − estimate) is shown: the Timetable (a badge such as `+20m` in red when over, `-10m` in green when under, with a tooltip), the Statistics view (per category and in the total, completed tasks that have `(est …)`), and the editor (`(est …)` is highlighted with the estimate color).
 - `dynamicTimetable.durationFormat`: `hm` (default, `2h20m`) or `minutes` (`140 (est 120)`). Both forms are always readable.
+- Tags stay where you wrote them. `- [ ] #work title ; 2h` becomes `- [x] #work title ; 2h20m (est 2h) @ …`: only the estimate and start-time parts of the line are rewritten, and tags are no longer copied to the end of the line.
 - Lines completed by earlier versions have no `(est …)`; they are left as they are and simply show no difference.
 
 ## Settings UI
