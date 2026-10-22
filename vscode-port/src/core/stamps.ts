@@ -1,5 +1,5 @@
 /**
- * 打刻: タスク行末尾の `(@created: 値)` / `(@done: 値)`。
+ * 打刻: タスク行末尾の `(@created: 値)`。旧版が書いた `(@done: 値)` も読み取り・保持はするが、新しくは書かない。
  * 値は書式化済みの文字列をそのまま保持する(再書式化しない)。
  */
 export const DEFAULT_TIMESTAMP_FORMAT = 'YYYY-MM-DD HH:mm';

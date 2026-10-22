@@ -96,7 +96,7 @@ describe('extension integration (bundled dist/extension.js on a vscode mock)', (
     assert.equal(env.state.applyEdits, 1);
     assert.equal(env.state.saves, 1);
     assert.equal(doc.isDirty, false);
-    assert.match(doc.text, /- \[x\] A ; 20 @ \d{4}-\d\d-\d\d \d\d:\d\d #w \(@done: /);
+    assert.match(doc.text, /- \[x\] A ; 20 @ \d{4}-\d\d-\d\d \d\d:\d\d #w$/m);
     assert.match(doc.text, /- \[ \] B ; 10/);
     assert.ok(posted.length > before, 'refreshed after complete');
     assert.equal(lastUpdate(posted).tasks[0].isCompleted, true);
@@ -120,7 +120,7 @@ describe('extension integration (bundled dist/extension.js on a vscode mock)', (
     load(); const doc = env.makeDoc(`---\nstartTime: ${hms(minutesAgo(15))}\n---\n- [ ] Deep ; 60`);
     const { handlers } = boot(doc);
     await handlers.msg({ type: 'interrupt' });
-    assert.match(doc.text, /- \[x\] Deep ; 15 @ \d{4}-\d\d-\d\d \d\d:\d\d \(@done: [^)]+\)\n- \[ \] Deep ; 45 \(@created: /);
+    assert.match(doc.text, /- \[x\] Deep ; 15 @ \d{4}-\d\d-\d\d \d\d:\d\d\n- \[ \] Deep ; 45 \(@created: /);
   });
 
   test('complete with nothing to do → info message, document untouched', async () => {
@@ -545,13 +545,13 @@ describe('extension integration (bundled dist/extension.js on a vscode mock)', (
       return out;
     };
 
-    test('default ON: estimate/start/created/done get theme colors, tags get category colors, completed line is dimmed', async () => {
+    test('default ON: estimate/start/created get theme colors, tags get category colors, completed line is dimmed; legacy @done is not painted', async () => {
       const doc = setup(); await flush();
       const p = painted(doc);
       assert.deepEqual(p.estimate, ['; 30', '; 15']);
       assert.deepEqual(p.start, ['@ 09:15', '@ 2026-10-21 09:45']);
       assert.deepEqual(p.created, ['(@created: 2026-10-21 09:00)']);
-      assert.deepEqual(p.done, ['(@done: 2026-10-21 10:00)']);
+      assert.equal(p.done, undefined, 'a legacy (@done) written by an older version is left alone');
       assert.deepEqual(p.completed, [LINES[1]]);
       const tagKeys = Object.keys(p).filter((k) => k.startsWith('tag:'));
       assert.equal(tagKeys.length, 2);
@@ -572,7 +572,7 @@ describe('extension integration (bundled dist/extension.js on a vscode mock)', (
     });
 
     test('highlightColors / highlightOpacity override the theme color', async () => {
-      const doc = setup({ highlightColors: { estimate: '#112233', done: '#aabbcc80' }, highlightOpacity: 0.5 }); await flush();
+      const doc = setup({ highlightColors: { estimate: '#112233', created: '#aabbcc80' }, highlightOpacity: 0.5 }); await flush();
       const bgs = [...edOf(doc).decorations.keys()].map((t) => t.options.backgroundColor);
       assert.ok(bgs.includes('#11223380'), JSON.stringify(bgs));
       assert.ok(bgs.includes('#aabbcc80'));
@@ -681,11 +681,12 @@ describe('extension integration (bundled dist/extension.js on a vscode mock)', (
   });
 
   // ---------------- Timestamps (Complete / Interrupt through the view) ----------------
-  test('Complete: DEFAULT settings write date-time start + (@done: …); explicit OFF writes time-only, no stamps', async () => {
+  test('Complete: DEFAULT settings write the date-time start and NO stamp; explicit OFF writes time-only', async () => {
     load(); const on = env.makeDoc(`---\nstartTime: ${hms(minutesAgo(10))}\n---\n- [ ] A ; 30 #w`);
     const a = boot(on);
     await a.handlers.msg({ type: 'complete' });
-    assert.match(on.text, /- \[x\] A ; 10 @ \d{4}-\d\d-\d\d \d\d:\d\d #w \(@done: \d{4}-\d\d-\d\d \d\d:\d\d\)/);
+    assert.match(on.text, /- \[x\] A ; 10 @ \d{4}-\d\d-\d\d \d\d:\d\d #w$/m);
+    assert.ok(!on.text.includes('(@'), on.text);
     load(); const off = env.makeDoc(`---\nstartTime: ${hms(minutesAgo(10))}\n---\n- [ ] A ; 30 #w`);
     const b = boot(off, { enableTimestamps: false });
     await b.handlers.msg({ type: 'complete' });
@@ -693,12 +694,12 @@ describe('extension integration (bundled dist/extension.js on a vscode mock)', (
     assert.match(off.text, /- \[x\] A ; 10 @ \d\d:\d\d #w$/m);
   });
 
-  test('Interrupt: done line has Done, remaining task has Created (interrupt time)', async () => {
+  test('Interrupt: the done line gets no @done, the remaining task has Created (interrupt time)', async () => {
     load(); const doc = env.makeDoc(`---\nstartTime: ${hms(minutesAgo(15))}\n---\n- [ ] Deep ; 60 #w (@created: 2020-01-02 03:04)`);
     const { handlers } = boot(doc, { enableTimestamps: true });
     await handlers.msg({ type: 'interrupt' });
     const l = doc.text.split('\n');
-    assert.match(l[3], /^- \[x\] Deep ; 15 @ \d{4}-\d\d-\d\d \d\d:\d\d #w \(@created: 2020-01-02 03:04\) \(@done: \d{4}-\d\d-\d\d \d\d:\d\d\)$/);
+    assert.match(l[3], /^- \[x\] Deep ; 15 @ \d{4}-\d\d-\d\d \d\d:\d\d #w \(@created: 2020-01-02 03:04\)$/);
     assert.match(l[4], /^- \[ \] Deep ; 45 #w \(@created: \d{4}-\d\d-\d\d \d\d:\d\d\)$/);
     assert.ok(!l[4].includes('2020-01-02'), 'remaining task must NOT inherit the original Created');
   });

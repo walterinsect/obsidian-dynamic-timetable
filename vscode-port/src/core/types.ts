@@ -19,7 +19,7 @@ export interface DynamicTimetableSettings {
   showRemainingTime: boolean;
   customUrlScheme: string;
   showUntilRegex: string;
-  /** 完了・中断・テンプレート作成時に (@created/@done) を記録する */
+  /** テンプレート作成時と Interrupt の残りタスクに (@created) を記録する(@done は記録しない) */
   enableTimestamps: boolean;
   /** 打刻の書式(YYYY MM DD HH mm ss) */
   timestampFormat: string;

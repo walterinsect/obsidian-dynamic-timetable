@@ -20,11 +20,11 @@ describe('computeHighlights', () => {
     assert.deepEqual(t.map((x) => x[1]), ['; 30', '@ 09:15', '#work', '#life', '(@created: 2026-10-21 09:00)']);
     assert.deepEqual(t.map((x) => x[0]), ['estimate', 'start', 'tag', 'tag', 'created']);
   });
-  test('completed line: date-time start, both stamps, line dimmed from the bullet to the end', () => {
+  test('completed line: date-time start, Created, line dimmed from the bullet to the end; a legacy (@done) is NOT highlighted', () => {
     const l = '  - [x] a ; 25 @ 2026-10-21 09:12 #w (@created: 2026-10-21 09:00) (@done: 2026-10-21 09:37)';
     const t = texts(l);
     assert.deepEqual(t.find((x) => x[0] === 'start')[1], '@ 2026-10-21 09:12');
-    assert.deepEqual(t.find((x) => x[0] === 'done')[1], '(@done: 2026-10-21 09:37)');
+    assert.equal(t.find((x) => x[0] === 'done'), undefined);
     assert.deepEqual(t.find((x) => x[0] === 'created')[1], '(@created: 2026-10-21 09:00)');
     assert.deepEqual(t.find((x) => x[0] === 'completed')[1], l.trimStart());
   });
@@ -75,7 +75,7 @@ describe('computeHighlights', () => {
 describe('options and colors', () => {
   test('sanitizeHighlightOptions: defaults, clamping, invalid colors dropped', () => {
     assert.deepEqual(H.sanitizeHighlightOptions({}), { enabled: true, opacity: 0.2, colors: {}, completedOpacity: 0.55 });
-    const o = H.sanitizeHighlightOptions({ enabled: false, opacity: 5, completedOpacity: 0, colors: { estimate: '#112233', done: 'red', start: '#11223344', bogus: '#000000' } });
+    const o = H.sanitizeHighlightOptions({ enabled: false, opacity: 5, completedOpacity: 0, colors: { estimate: '#112233', created: 'red', done: '#000000', start: '#11223344', bogus: '#000000' } });
     assert.equal(o.enabled, false); assert.equal(o.opacity, 1); assert.equal(o.completedOpacity, 0.1);
     assert.deepEqual(o.colors, { estimate: '#112233', start: '#11223344' });
     assert.equal(H.sanitizeHighlightOptions({ opacity: 'x', colors: [1] }).opacity, 0.2);

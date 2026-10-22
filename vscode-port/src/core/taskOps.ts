@@ -98,8 +98,9 @@ export const findCurrentTaskLine = (content: string, settings: OpSettings): Curr
  * mode='interrupt' なら残り時間ぶんの未完了タスクを直後に追加する。
  * 書き換え対象が見つからなければ content は変更しない(startTime も触らない)。
  *
- * 打刻(settings.enableTimestamps): 完了行に (@done: now) を付け、Interrupt の残りタスクには
- * (@created: now) を付ける。完了行の既存の (@created: …) は保持する。無効時も既存の刻印は失わない。
+ * 打刻(settings.enableTimestamps): Interrupt の残りタスクに (@created: now) を付ける。
+ * 完了行には何も追加しない((@done) は記録しない)。完了行の既存の刻印(旧版の @done を含む)は保持し、
+ * 無効時も失わない。
  */
 export const applyTaskUpdate = (
   content: string,
@@ -129,7 +130,7 @@ export const applyTaskUpdate = (
 
   lines[idx] =
     `${indent}${bullet} [x] ${name} ${delim} ${elapsed} ${startDelim} ${startText}${tagPart}` +
-    stampSuffix({ created: existing.created, done: stampNow ?? existing.done });
+    stampSuffix({ created: existing.created, done: existing.done });
 
   let remainingMinutes: number | undefined;
   if (mode === 'interrupt') {

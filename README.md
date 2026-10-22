@@ -21,23 +21,24 @@ startTime: 09:00:00
 - The status bar shows task progress, e.g. `3/8 (38%)`: recognized tasks, completed tasks and the completion rate. It counts the same tasks the timetable shows, updates as you edit, and opens the timetable when clicked. Turn it off with `dynamicTimetable.showProgressInStatusBar`.
 - Complete and Interrupt rewrite the file and update `startTime` to the current time. By default the file is also saved.
 
-## Timestamps (Created / Done)
+## Timestamps (Created)
 
-`dynamicTimetable.enableTimestamps` (**on by default**) records date-time stamps on the task line. The actual start time on a completed line (`@ YYYY-MM-DD HH:mm`) and `(@created/@done)` use the `YYYY-MM-DD HH:mm` format by default. When the setting is off, no stamps are written and the start time is written as `@ HH:MM`, as before. The legacy forms `@ HH:MM`, `@ HHMM` and `@ YYYY-MM-DDTHH:mm` can still be read.
+`dynamicTimetable.enableTimestamps` (**on by default**) records a creation time `(@created: …)` on the task line, and writes the actual start time of a completed line with its date (`@ YYYY-MM-DD HH:mm`). Both use the `YYYY-MM-DD HH:mm` format by default. Completing a task adds no stamp. When the setting is off, no stamps are written and the start time is written as `@ HH:MM`, as before. The legacy forms `@ HH:MM`, `@ HHMM` and `@ YYYY-MM-DDTHH:mm` can still be read.
 
 ```markdown
 - [ ] Implementation ; 60 #work (@created: 2026-10-21 09:12)                       <- created from a template
-- [x] Implementation ; 37 @ 2026-10-21 09:12 #work (@created: 2026-10-21 09:12) (@done: 2026-10-21 09:49)   <- after Complete
+- [x] Implementation ; 37 @ 2026-10-21 09:12 #work (@created: 2026-10-21 09:12)   <- after Complete (no stamp is added)
 ```
 
 | Action | What is recorded |
 |---|---|
 | Create a task from a template | `(@created: creation time)` |
-| Complete | `(@done: completion time)` on the completed line. An existing Created is kept |
-| Interrupt | `(@done: interrupt time)` on the completed line, and `(@created: interrupt time)` on the remaining task (the original Created is not carried over) |
+| Complete | nothing is added. An existing Created is kept |
+| Interrupt | `(@created: interrupt time)` on the remaining task (the original Created is not carried over); nothing on the completed line |
 
 - The format is `dynamicTimetable.timestampFormat` (default `YYYY-MM-DD HH:mm`; tokens `YYYY MM DD HH mm ss`; `)` is not allowed). It does not affect the format of the actual start time, which is always `YYYY-MM-DD HH:mm`.
-- Created is never added to hand-written tasks (only Done).
+- Created is never added to hand-written tasks.
+- `(@done: …)` was written by versions before 0.8.0. It is no longer written, but it is still read, ignored for the name/estimate/categories, and kept as it is when a line is rewritten.
 - Stamps do not affect how the task name, estimate or categories are read. Turning the feature off does not remove existing stamps.
 
 ## Settings UI
@@ -63,20 +64,19 @@ On the task lines the timetable recognizes (checkbox lines with an estimate, up 
 | Estimate | `; 30` | `dynamicTimetable.estimateBackground` |
 | Start time | `@ 09:15`, `@ 2026-10-21 09:12` | `dynamicTimetable.startBackground` |
 | Created | `(@created: …)` | `dynamicTimetable.createdBackground` |
-| Done | `(@done: …)` | `dynamicTimetable.doneBackground` |
 | Completed task | `- [x] …` | the whole line is dimmed (`completedTaskOpacity`, default 0.55) |
 
 Settings (section **Highlight**):
 
 - `dynamicTimetable.enableHighlight` (default on) turns everything off or on.
 - `dynamicTimetable.highlightOpacity` (default 0.2) is the strength of the backgrounds. It applies to tag colors and to `highlightColors` written as `#RRGGBB`.
-- `dynamicTimetable.highlightColors` sets the colors of `estimate`, `start`, `created` and `done` as `#RRGGBB` or `#RRGGBBAA`. Keys that are not set use the theme colors above.
+- `dynamicTimetable.highlightColors` sets the colors of `estimate`, `start` and `created` as `#RRGGBB` or `#RRGGBBAA`. Keys that are not set use the theme colors above.
 - `dynamicTimetable.completedTaskOpacity` (default 0.55; 1 = do not dim).
 - Tag colors follow the category colors, so change them with `categoryColorMap` / `categoryColors`.
 - The theme colors can also be changed per theme with `workbench.colorCustomizations`:
 
 ```jsonc
-"workbench.colorCustomizations": { "dynamicTimetable.doneBackground": "#22c55e55" }
+"workbench.colorCustomizations": { "dynamicTimetable.createdBackground": "#14b8a655" }
 ```
 
 ## Inserting task templates

@@ -4,6 +4,14 @@ English | [日本語](https://github.com/walterinsect/obsidian-dynamic-timetable
 
 All notable changes to the VS Code port of Dynamic Timetable. The original Obsidian plugin is by L7Cy (MIT).
 
+## 0.8.0
+### Removed
+- **The `(@done: …)` stamp is no longer written.** Complete and Interrupt add nothing to the completed line; the only stamp written is `(@created: …)` (template-created tasks and the remaining part of an interrupted task).
+- The `done` highlight color: theme color `dynamicTimetable.doneBackground` and the `done` key of `highlightColors`.
+
+### Compatibility
+- `(@done: …)` stamps already in your files are still read (ignored for names, estimates and categories) and are kept when a line is rewritten. They are no longer highlighted.
+
 ## 0.7.0
 ### Added
 - **Editor highlighting** on the task lines the timetable recognizes (built on the decoration API; follows your delimiter settings and updates as you type):

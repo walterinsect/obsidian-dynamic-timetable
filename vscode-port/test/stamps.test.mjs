@@ -108,7 +108,7 @@ describe('date-included actual start "@ YYYY-MM-DD HH:mm"', () => {
   });
   test('custom timestampFormat does not change the start format (always parseable)', () => {
     const r = Ops.applyTaskUpdate(yaml() + '- [ ] A ; 30', S({ enableTimestamps: true, timestampFormat: 'HH:mm' }), today(9, 37), 'complete');
-    assert.match(lines(r.content)[3], new RegExp('^- \\[x\\] A ; 37 @ ' + D + ' 09:00 \\(@done: 09:37\\)$'));
+    assert.match(lines(r.content)[3], new RegExp('^- \\[x\\] A ; 37 @ ' + D + ' 09:00$'));
   });
 });
 
@@ -118,29 +118,29 @@ describe('applyTaskUpdate with timestamps', () => {
     assert.ok(!r.content.includes('(@'), r.content);
     assert.equal(lines(r.content)[3], '- [x] A ; 25 @ 09:00 #w');
   });
-  test('complete: adds (@done: now), no Created on a hand-written task', () => {
+  test('complete: adds NO stamp at all (no @done), and no Created on a hand-written task', () => {
     const now = today(9, 37);
     const r = Ops.applyTaskUpdate(yaml() + '- [ ] A ; 30 #w', ON, now, 'complete');
-    assert.equal(lines(r.content)[3], `- [x] A ; 37 @ ${D} 09:00 #w (@done: ${ymd(now)} 09:37)`);
+    assert.equal(lines(r.content)[3], `- [x] A ; 37 @ ${D} 09:00 #w`);
   });
-  test('complete: keeps an existing Created unchanged and adds Done after it', () => {
+  test('complete: keeps an existing Created unchanged and adds nothing', () => {
     const now = today(9, 37);
     const r = Ops.applyTaskUpdate(yaml() + '- [ ] A ; 30 #w (@created: 2020-01-02 03:04)', ON, now, 'complete');
-    assert.equal(lines(r.content)[3], `- [x] A ; 37 @ ${D} 09:00 #w (@created: 2020-01-02 03:04) (@done: ${ymd(now)} 09:37)`);
+    assert.equal(lines(r.content)[3], `- [x] A ; 37 @ ${D} 09:00 #w (@created: 2020-01-02 03:04)`);
   });
   test('REGRESSION: stamp no longer ends up between the name and ";"', () => {
     const r = Ops.applyTaskUpdate(yaml() + '- [ ] A ; 30 (@created: 2020-01-02 03:04)', ON, today(9, 10), 'complete');
-    assert.match(lines(r.content)[3], new RegExp('^- \\[x\\] A ; 10 @ ' + D + ' 09:00 \\(@created: 2020-01-02 03:04\\) \\(@done: '));
+    assert.match(lines(r.content)[3], new RegExp('^- \\[x\\] A ; 10 @ ' + D + ' 09:00 \\(@created: 2020-01-02 03:04\\)$'));
   });
-  test('complete with feature OFF still preserves an existing Created (no data loss) and adds no Done', () => {
+  test('complete with feature OFF still preserves an existing Created (no data loss)', () => {
     const r = Ops.applyTaskUpdate(yaml() + '- [ ] A ; 30 (@created: 2020-01-02 03:04)', OFF, today(9, 10), 'complete');
     assert.equal(lines(r.content)[3], '- [x] A ; 10 @ 09:00 (@created: 2020-01-02 03:04)');
   });
-  test('INTERRUPT: done line gets Done; remaining task gets Created = interrupt time (not the original)', () => {
+  test('INTERRUPT: the done line gets NO @done; the remaining task gets Created = interrupt time (not the original)', () => {
     const now = today(9, 25);
     const r = Ops.applyTaskUpdate(yaml() + '- [ ] Deep ; 60 #w (@created: 2020-01-02 03:04)\n- [ ] Next ; 5', ON, now, 'interrupt');
     const l = lines(r.content);
-    assert.equal(l[3], `- [x] Deep ; 25 @ ${D} 09:00 #w (@created: 2020-01-02 03:04) (@done: ${ymd(now)} 09:25)`);
+    assert.equal(l[3], `- [x] Deep ; 25 @ ${D} 09:00 #w (@created: 2020-01-02 03:04)`);
     assert.equal(l[4], `- [ ] Deep ; 35 #w (@created: ${ymd(now)} 09:25)`);
     assert.equal(l[5], '- [ ] Next ; 5');
   });
@@ -148,22 +148,22 @@ describe('applyTaskUpdate with timestamps', () => {
     const r = Ops.applyTaskUpdate(yaml() + '- [ ] Deep ; 60 (@created: 2020-01-02 03:04)', OFF, today(9, 25), 'interrupt');
     assert.equal(lines(r.content)[4], '- [ ] Deep ; 35');
   });
-  test('interrupt over-run: no remaining task, Done still recorded', () => {
+  test('interrupt over-run: no remaining task, and still no stamp on the done line', () => {
     const now = today(10, 0);
     const r = Ops.applyTaskUpdate(yaml() + '- [ ] A ; 10', ON, now, 'interrupt');
     assert.equal(r.remainingMinutes, undefined);
-    assert.match(lines(r.content)[3], /\(@done: /);
+    assert.ok(!r.content.includes('(@'), r.content);
     assert.equal(lines(r.content).filter((x) => x.includes('[ ]')).length, 0);
   });
-  test('custom time format', () => {
-    const r = Ops.applyTaskUpdate(yaml() + '- [ ] A ; 30', S({ enableTimestamps: true, timestampFormat: 'HH:mm' }), today(9, 37), 'complete');
-    assert.match(lines(r.content)[3], /\(@done: 09:37\)$/);
+  test('custom time format applies to the Created stamp of the remaining task', () => {
+    const r = Ops.applyTaskUpdate(yaml() + '- [ ] A ; 60', S({ enableTimestamps: true, timestampFormat: 'HH:mm' }), today(9, 37), 'interrupt');
+    assert.match(lines(r.content)[4], /^- \[ \] A ; 23 \(@created: 09:37\)$/);
   });
   test('indent / bullet / CRLF preserved with stamps', () => {
     const c = '---\r\nstartTime: 09:00:00\r\n---\r\n  * [ ] A ; 30 #w\r\n';
     const r = Ops.applyTaskUpdate(c, ON, today(9, 10), 'complete');
     assert.ok(!/(^|[^\r])\n/.test(r.content));
-    assert.match(lines(r.content)[3], new RegExp('^  \\* \\[x\\] A ; 10 @ ' + D + ' 09:00 #w \\(@done: '));
+    assert.match(lines(r.content)[3], new RegExp('^  \\* \\[x\\] A ; 10 @ ' + D + ' 09:00 #w$'));
   });
   test('result re-parses: completed, name clean, next task found', () => {
     const r = Ops.applyTaskUpdate(yaml() + '- [ ] A ; 30 #w\n- [ ] B ; 10', ON, today(9, 10), 'complete');
@@ -171,19 +171,32 @@ describe('applyTaskUpdate with timestamps', () => {
     assert.deepEqual(t.map((x) => [x.originalTaskName, x.isCompleted]), [['A', true], ['B', false]]);
     assert.equal(r.next.originalTaskName, 'B');
   });
-  test('completing repeatedly never nests or duplicates stamps', () => {
+  test('completing repeatedly never adds @done and never nests or duplicates Created', () => {
     let c = yaml() + '- [ ] A ; 30 (@created: X1)\n- [ ] B ; 30 (@created: X2)\n- [ ] C ; 30';
     for (let i = 0; i < 3; i++) c = Ops.applyTaskUpdate(c, ON, today(9, 10 + i), 'complete').content;
     for (const l of lines(c).filter((x) => x.includes('[x]'))) {
-      assert.equal((l.match(/\(@done:/g) || []).length, 1, l);
+      assert.equal((l.match(/\(@done:/g) || []).length, 0, l);
       assert.ok((l.match(/\(@created:/g) || []).length <= 1, l);
     }
   });
   test('REGRESSION: custom startTimeDelimiter is used when writing the actual start', () => {
     const r = Ops.applyTaskUpdate(yaml() + '- [ ] A | 30', S({ taskEstimateDelimiter: '|', startTimeDelimiter: '$' }), today(9, 10), 'complete');
-    assert.equal(lines(r.content)[3], `- [x] A | 10 $ ${D} 09:00 (@done: ${D} 09:10)`);
+    assert.equal(lines(r.content)[3], `- [x] A | 10 $ ${D} 09:00`);
     const t = TaskParser.fromSettings(S({ taskEstimateDelimiter: '|', startTimeDelimiter: '$' })).filterAndParseTasks(r.content)[0];
     assert.equal(t.originalStartTime, true);
+  });
+});
+
+describe('legacy (@done: …) stamps written by older versions', () => {
+  const L = '- [x] old ; 25 @ 09:00 #w (@created: 2026-10-21 09:00) (@done: 2026-10-21 09:25)';
+  test('still read and stripped: name, estimate, categories, start are clean', () => {
+    const t = TaskParser.fromSettings(S()).filterAndParseTasks(yaml() + L)[0];
+    assert.equal(t.originalTaskName, 'old'); assert.equal(t.estimate, '25'); assert.deepEqual(t.categories, ['w']);
+    assert.equal(t.isCompleted, true);
+  });
+  test('kept untouched when a line is rewritten (no data loss), and never added', () => {
+    const r = Ops.applyTaskUpdate(yaml() + '- [ ] A ; 30 (@created: C) (@done: OLD)', ON, today(9, 10), 'complete');
+    assert.match(lines(r.content)[3], /\(@created: C\) \(@done: OLD\)$/);
   });
 });
 

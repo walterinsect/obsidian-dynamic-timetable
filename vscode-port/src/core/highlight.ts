@@ -6,7 +6,7 @@
 import type { TaskParser } from './TaskParser';
 import { findStamps } from './stamps';
 
-export type HighlightKind = 'tag' | 'estimate' | 'start' | 'created' | 'done' | 'completed';
+export type HighlightKind = 'tag' | 'estimate' | 'start' | 'created' | 'completed';
 
 export interface HighlightRange {
   kind: HighlightKind;
@@ -30,7 +30,8 @@ export const computeHighlights = (parser: TaskParser, content: string): Highligh
     // 刻印は先に位置を取り、同じ長さの空白に置き換えてから他を探す(刻印内の # や @ を拾わない・位置がずれない)
     let masked = text;
     for (const st of findStamps(text)) {
-      out.push({ kind: st.kind, line: index, start: st.start, end: st.end });
+      // 旧版が書いた (@done: …) は読み飛ばすだけ(強調しない)。位置は下で空白に置き換える
+      if (st.kind === 'created') out.push({ kind: 'created', line: index, start: st.start, end: st.end });
       masked = masked.slice(0, st.start) + ' '.repeat(st.end - st.start) + masked.slice(st.end);
     }
     const est = estimateRe.exec(masked);
@@ -52,8 +53,8 @@ export const computeHighlights = (parser: TaskParser, content: string): Highligh
 
 // ------------------------------------------------------------ 設定・色
 
-export type ColorKey = 'estimate' | 'start' | 'created' | 'done';
-export const COLOR_KEYS: ColorKey[] = ['estimate', 'start', 'created', 'done'];
+export type ColorKey = 'estimate' | 'start' | 'created';
+export const COLOR_KEYS: ColorKey[] = ['estimate', 'start', 'created'];
 
 export interface HighlightOptions {
   enabled: boolean;

@@ -23,7 +23,7 @@
   },
   "displayName": "Dynamic Timetable",
   "description": "Turn Markdown task lists with estimates into a live timetable (port of the Obsidian plugin).",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "publisher": "walterinsect",
   "license": "MIT",
   "engines": {
@@ -336,7 +336,7 @@
           "dynamicTimetable.enableTimestamps": {
             "type": "boolean",
             "default": true,
-            "description": "Record timestamps on the task line: (@done: …) when a task is completed or interrupted, and (@created: …) on tasks created from a template and on the remaining part of an interrupted task.",
+            "description": "Record a creation timestamp (@created: …) on tasks created from a template and on the remaining part of an interrupted task. Completing a task adds no stamp.",
             "order": 24
           },
           "dynamicTimetable.timestampFormat": {
@@ -415,7 +415,7 @@
           "dynamicTimetable.enableHighlight": {
             "type": "boolean",
             "default": true,
-            "description": "Highlight tags, estimates, start times and (@created)/(@done) stamps on the task lines the timetable recognizes, and dim completed tasks.",
+            "description": "Highlight tags, estimates, start times and (@created) stamps on the task lines the timetable recognizes, and dim completed tasks.",
             "order": 28
           },
           "dynamicTimetable.highlightOpacity": {
@@ -429,7 +429,7 @@
           "dynamicTimetable.highlightColors": {
             "type": "object",
             "default": {},
-            "markdownDescription": "Background colors for highlights as `#RRGGBB` or `#RRGGBBAA`. Keys not set use the theme colors `dynamicTimetable.estimateBackground`, `startBackground`, `createdBackground` and `doneBackground` (customizable in `workbench.colorCustomizations`). Tag colors are the category colors (see `#dynamicTimetable.categoryColorMap#`).",
+            "markdownDescription": "Background colors for highlights as `#RRGGBB` or `#RRGGBBAA`. Keys not set use the theme colors `dynamicTimetable.estimateBackground`, `startBackground` and `createdBackground` (customizable in `workbench.colorCustomizations`). Tag colors are the category colors (see `#dynamicTimetable.categoryColorMap#`).",
             "properties": {
               "estimate": {
                 "type": "string",
@@ -445,11 +445,6 @@
                 "type": "string",
                 "pattern": "^#([0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
                 "description": "Background color of the created part."
-              },
-              "done": {
-                "type": "string",
-                "pattern": "^#([0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
-                "description": "Background color of the done part."
               }
             },
             "additionalProperties": false,
@@ -493,16 +488,6 @@
         "defaults": {
           "dark": "#14b8a640",
           "light": "#14b8a630",
-          "highContrast": "#ffffff33",
-          "highContrastLight": "#00000022"
-        }
-      },
-      {
-        "id": "dynamicTimetable.doneBackground",
-        "description": "Background of the (@done: …) stamp.",
-        "defaults": {
-          "dark": "#22c55e40",
-          "light": "#22c55e30",
           "highContrast": "#ffffff33",
           "highContrastLight": "#00000022"
         }

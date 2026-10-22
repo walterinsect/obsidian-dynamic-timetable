@@ -4,6 +4,14 @@
 
 Dynamic Timetable の VS Code 移植版の主な変更点です。元の Obsidian プラグインは L7Cy 作(MIT)です。
 
+## 0.8.0
+### 削除
+- **`(@done: …)` の打刻を書かなくなりました。** Complete と Interrupt は完了行に何も追記しません。書き込まれる打刻は `(@created: …)` だけです(テンプレートで作ったタスクと、Interrupt の残りタスク)。
+- `done` のハイライト色(テーマ色 `dynamicTimetable.doneBackground` と `highlightColors` の `done` キー)。
+
+### 互換性
+- ファイルに既にある `(@done: …)` は、これまでどおり読み取り(名前・見積り・カテゴリには影響しない)、行を書き換えるときも残します。ただしハイライトはされません。
+
 ## 0.7.0
 ### 追加
 - **エディタ上のハイライト**(Timetable が認識するタスク行が対象。Decoration 機能で実現し、区切り文字の設定に追従、入力に合わせて更新):

@@ -21,23 +21,24 @@ startTime: 09:00:00
 - ステータスバーにタスクの進捗(例: `3/8 (38%)` = 完了数/認識数と完了率)を表示します。Timetable に表示されるタスクと同じ範囲を数え、編集に合わせて更新され、クリックすると Timetable を開きます。`dynamicTimetable.showProgressInStatusBar` でオフにできます。
 - Complete / Interrupt はファイルを書き換え、`startTime` を現在時刻に更新します(既定で保存まで行います)。
 
-## 打刻(Created / Done)
+## 打刻(Created)
 
-`dynamicTimetable.enableTimestamps`(**既定はオン**)により、タスク行へ日付付きの時刻を記録します。完了行の実績開始時刻(`@ YYYY-MM-DD HH:mm`)と `(@created/@done)` は、既定で `YYYY-MM-DD HH:mm` 形式です。オフにすると打刻は行われず、開始時刻は従来どおり `@ HH:MM` で書かれます。`@ HH:MM` / `@ HHMM` / `@ YYYY-MM-DDTHH:mm` の旧形式も引き続き読み取れます。
+`dynamicTimetable.enableTimestamps`(**既定はオン**)により、タスク行へ作成時刻 `(@created: …)` を記録し、完了行の実績開始時刻を日付付き(`@ YYYY-MM-DD HH:mm`)で書きます。どちらも既定で `YYYY-MM-DD HH:mm` 形式です。Complete では打刻を追記しません。オフにすると打刻は行われず、開始時刻は従来どおり `@ HH:MM` で書かれます。`@ HH:MM` / `@ HHMM` / `@ YYYY-MM-DDTHH:mm` の旧形式も引き続き読み取れます。
 
 ```markdown
 - [ ] 実装 ; 60 #work (@created: 2026-10-21 09:12)                       ← テンプレートで作成
-- [x] 実装 ; 37 @ 2026-10-21 09:12 #work (@created: 2026-10-21 09:12) (@done: 2026-10-21 09:49)   ← Complete
+- [x] 実装 ; 37 @ 2026-10-21 09:12 #work (@created: 2026-10-21 09:12)   ← Complete(打刻は追記されない)
 ```
 
 | 操作 | 記録 |
 |---|---|
 | テンプレートでタスクを作成 | `(@created: 作成時刻)` |
-| Complete | 完了行に `(@done: 完了時刻)`。既存の Created は保持 |
-| Interrupt | 完了行に `(@done: 中断時刻)`。残りのタスクに `(@created: 中断時刻)`(元の Created は引き継ぎません) |
+| Complete | 何も追記しない。既存の Created は保持 |
+| Interrupt | 残りのタスクに `(@created: 中断時刻)`(元の Created は引き継ぎません)。完了行には何も追記しない |
 
 - 書式は `dynamicTimetable.timestampFormat`(既定 `YYYY-MM-DD HH:mm`、トークン `YYYY MM DD HH mm ss`、`)` は使えません)。実績開始時刻の書式には影響せず、こちらは常に `YYYY-MM-DD HH:mm` です。
-- 手書きのタスクに Created は後付けしません(Done のみ)。
+- 手書きのタスクに Created は後付けしません。
+- `(@done: …)` は 0.8.0 より前のバージョンが書いていました。今は書きませんが、読み取りは行い、名前・見積り・カテゴリの解釈には影響させず、行を書き換えるときもそのまま残します。
 - 刻印はタスク名・見積り・カテゴリの解釈には影響しません。無効にしても既存の刻印は消えません。
 
 ## 設定画面(GUI)
@@ -63,20 +64,19 @@ Timetable が認識するタスク行(見積りのあるチェックボックス
 | 見積り | `; 30` | `dynamicTimetable.estimateBackground` |
 | 開始時刻 | `@ 09:15`, `@ 2026-10-21 09:12` | `dynamicTimetable.startBackground` |
 | 作成の打刻 | `(@created: …)` | `dynamicTimetable.createdBackground` |
-| 完了の打刻 | `(@done: …)` | `dynamicTimetable.doneBackground` |
 | 完了したタスク | `- [x] …` | 行全体を薄く表示(`completedTaskOpacity`、既定 0.55) |
 
 設定(**Highlight** セクション):
 
 - `dynamicTimetable.enableHighlight`(既定オン): ハイライト全体のオン/オフ。
 - `dynamicTimetable.highlightOpacity`(既定 0.2): 背景の濃さ。タグの色と、`#RRGGBB` で書いた `highlightColors` に適用されます。
-- `dynamicTimetable.highlightColors`: `estimate` / `start` / `created` / `done` の色を `#RRGGBB` または `#RRGGBBAA` で指定。未指定のキーは上のテーマ色を使います。
+- `dynamicTimetable.highlightColors`: `estimate` / `start` / `created` の色を `#RRGGBB` または `#RRGGBBAA` で指定。未指定のキーは上のテーマ色を使います。
 - `dynamicTimetable.completedTaskOpacity`(既定 0.55。1 で薄くしない)。
 - タグの色はカテゴリ色に従うため、`categoryColorMap` / `categoryColors` で変更します。
 - テーマ色は `workbench.colorCustomizations` でテーマごとに変更することもできます:
 
 ```jsonc
-"workbench.colorCustomizations": { "dynamicTimetable.doneBackground": "#22c55e55" }
+"workbench.colorCustomizations": { "dynamicTimetable.createdBackground": "#14b8a655" }
 ```
 
 ## 定型タスクの挿入

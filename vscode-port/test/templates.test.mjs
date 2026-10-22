@@ -214,7 +214,7 @@ describe('TaskManager: templates', () => {
     await tm.insertTemplate(port, tpl);
     const r = await tm.complete(port);
     assert.equal(r.next.originalTaskName, 'x');
-    assert.match(port.text, new RegExp('- \\[x\\] cur ; 10 @ ' + DD + ' 09:00 \\(@done: '));
+    assert.match(port.text, new RegExp('- \\[x\\] cur ; 10 @ ' + DD + ' 09:00$', 'm'));
     assert.match(port.text, /- \[ \] x ; 5 #w \(@created: /);
   });
 });

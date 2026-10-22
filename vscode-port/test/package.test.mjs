@@ -103,15 +103,15 @@ describe('package.json consistency', () => {
     assert.match(extSrc, /@ext:walterinsect\.dynamic-timetable/);
   });
 
-  test('highlight: theme colors for estimate/start/created/done, settings and a Highlight section exist', () => {
+  test('highlight: theme colors for estimate/start/created (no done), settings and a Highlight section exist', () => {
     const ids = (pkg.contributes.colors || []).map((c) => c.id).sort();
-    assert.deepEqual(ids, ['estimate', 'start', 'created', 'done'].map((k) => `dynamicTimetable.${k}Background`).sort());
+    assert.deepEqual(ids, ['estimate', 'start', 'created'].map((k) => `dynamicTimetable.${k}Background`).sort());
     for (const c of pkg.contributes.colors) assert.ok(c.description && c.defaults.dark && c.defaults.light && c.defaults.highContrast, c.id);
     assert.ok(sections.some((x) => x.title === 'Highlight'));
     assert.equal(props['dynamicTimetable.enableHighlight'].default, true);
     assert.equal(props['dynamicTimetable.completedTaskOpacity'].default, 0.55);
     const hc = props['dynamicTimetable.highlightColors'];
-    assert.deepEqual(Object.keys(hc.properties), ['estimate', 'start', 'created', 'done']);
+    assert.deepEqual(Object.keys(hc.properties), ['estimate', 'start', 'created']);
     const { sanitizeHighlightOptions, DEFAULT_HIGHLIGHT } = require('../out/core/highlight.js');
     assert.deepEqual(sanitizeHighlightOptions({ enabled: props['dynamicTimetable.enableHighlight'].default, opacity: props['dynamicTimetable.highlightOpacity'].default, colors: hc.default, completedOpacity: props['dynamicTimetable.completedTaskOpacity'].default }), DEFAULT_HIGHLIGHT);
   });
