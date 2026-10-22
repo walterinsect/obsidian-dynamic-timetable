@@ -4,6 +4,14 @@
 
 Dynamic Timetable の VS Code 移植版の主な変更点です。元の Obsidian プラグインは L7Cy 作(MIT)です。
 
+## 0.7.0
+### 追加
+- **エディタ上のハイライト**(Timetable が認識するタスク行が対象。Decoration 機能で実現し、区切り文字の設定に追従、入力に合わせて更新):
+  - タグは Timetable・Statistics と共通のカテゴリ色。
+  - 見積り・開始時刻・`(@created)`・`(@done)` に薄い背景色(テーマ色 `dynamicTimetable.{estimate,start,created,done}Background`)。
+  - 完了したタスクを薄く表示。
+- 設定(新しい **Highlight** セクション。既定はすべてオン): `enableHighlight`、`highlightOpacity`(0.2)、`highlightColors`(`estimate` / `start` / `created` / `done` を `#RRGGBB` または `#RRGGBBAA` で指定)、`completedTaskOpacity`(0.55。1 で薄くしない)。
+
 ## 0.6.0
 ### 追加
 - **ステータスバーにタスクの進捗を表示**(左寄せ、ピン留め表示の隣): `$(checklist) 完了数/認識数 (完了率%)`(例 `3/8 (38%)`)。

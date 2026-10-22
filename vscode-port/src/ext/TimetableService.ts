@@ -2,6 +2,8 @@ import * as vscode from 'vscode';
 import { TaskManager } from '../host/TaskManager';
 import { CategoryColors } from '../host/CategoryColors';
 import { toDTO } from '../core/serialize';
+import { HighlightRange, computeHighlights } from '../core/highlight';
+import { TaskParser } from '../core/TaskParser';
 import { readOptions, readSettings, toViewSettings } from './settings';
 import { VscodeDocumentPort } from './document';
 import type { TargetTracker } from './target';
@@ -40,5 +42,17 @@ export class TimetableService {
       colors: this.colors.update(tasks, settings),
       warnings,
     };
+  }
+
+  /** エディタのハイライト用: 対象文書・認識されたタスク内の範囲・カテゴリ色。対象が無ければ undefined。 */
+  async highlightData(): Promise<{ doc: vscode.TextDocument; ranges: HighlightRange[]; colors: Record<string, string> } | undefined> {
+    const doc = this.target.document;
+    const port = this.port();
+    if (!doc || !port) return undefined;
+    const settings = readSettings();
+    const { tasks } = await this.manager.loadTasks(port);
+    const colors = this.colors.update(tasks, settings); // Timetable / Statistics と同じ色
+    const ranges = computeHighlights(TaskParser.fromSettings(settings), doc.getText());
+    return { doc, ranges, colors };
   }
 }

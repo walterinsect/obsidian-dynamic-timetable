@@ -4,6 +4,7 @@ import { TargetTracker } from './ext/target';
 import { TimetableService } from './ext/TimetableService';
 import { TimetableProvider } from './ext/TimetableProvider';
 import { StatisticsProvider } from './ext/StatisticsProvider';
+import { Highlighter } from './ext/Highlighter';
 import { TemplateCommands } from './ext/TemplateCommands';
 import { formatProgressText, formatProgressTooltip, summarizeTasks } from './core/progress';
 import { SECTION, readOptions, readSettings } from './ext/settings';
@@ -49,6 +50,8 @@ export function activate(ctx: vscode.ExtensionContext): void {
     progressTimer = setTimeout(() => void updateProgress().catch(() => progress.hide()), delay);
   };
 
+  const highlighter = new Highlighter(service);
+
   const webviewOptions = { webviewOptions: { retainContextWhenHidden: true } };
   ctx.subscriptions.push(
     target,
@@ -59,17 +62,21 @@ export function activate(ctx: vscode.ExtensionContext): void {
       updateStatus();
       refreshAll(0);
       scheduleProgress(0);
+      highlighter.schedule(0);
     }),
     vscode.workspace.onDidChangeTextDocument((e) => {
       if (target.document && e.document === target.document && e.contentChanges.length) {
         refreshAll();
         scheduleProgress();
+        highlighter.schedule();
       }
     }),
     vscode.workspace.onDidChangeConfiguration((e) => {
       if (e.affectsConfiguration(SECTION)) {
         refreshAll(0);
         scheduleProgress(0);
+        highlighter.reset();
+        highlighter.schedule(0);
       }
     }),
     vscode.commands.registerCommand('dynamicTimetable.complete', () => timetable.complete()),
@@ -98,9 +105,15 @@ export function activate(ctx: vscode.ExtensionContext): void {
       'dynamicTimetable.insertTaskTemplate5',
     ].map((id, i) => vscode.commands.registerCommand(id, () => templates.insert(i + 1)))
   );
+  ctx.subscriptions.push(
+    highlighter,
+    vscode.window.onDidChangeVisibleTextEditors(() => highlighter.schedule(0)),
+    vscode.window.onDidChangeActiveTextEditor(() => highlighter.schedule(0))
+  );
   ctx.subscriptions.push(progress, { dispose: () => clearTimeout(progressTimer) });
   updateStatus();
   scheduleProgress(0);
+  highlighter.schedule(0);
 }
 
 export function deactivate(): void {}

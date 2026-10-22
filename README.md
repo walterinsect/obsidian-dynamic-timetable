@@ -53,6 +53,32 @@ Settings that are arrays of objects (`taskTemplates`, `categoryColors`) only sho
 
 Write multi-line templates in `taskTemplates` (settings.json) as before.
 
+## Highlighting in the editor
+
+On the task lines the timetable recognizes (checkbox lines with an estimate, up to `showUntilRegex`), the extension adds a light background to the parts it understands, and dims completed tasks. It is built on the editor's decoration API, so it follows your delimiter settings and updates as you type. Other lines are never touched.
+
+| Part | Example | Color |
+|---|---|---|
+| Tag | `#work` | the category color (same as the Timetable and Statistics) |
+| Estimate | `; 30` | `dynamicTimetable.estimateBackground` |
+| Start time | `@ 09:15`, `@ 2026-10-21 09:12` | `dynamicTimetable.startBackground` |
+| Created | `(@created: …)` | `dynamicTimetable.createdBackground` |
+| Done | `(@done: …)` | `dynamicTimetable.doneBackground` |
+| Completed task | `- [x] …` | the whole line is dimmed (`completedTaskOpacity`, default 0.55) |
+
+Settings (section **Highlight**):
+
+- `dynamicTimetable.enableHighlight` (default on) turns everything off or on.
+- `dynamicTimetable.highlightOpacity` (default 0.2) is the strength of the backgrounds. It applies to tag colors and to `highlightColors` written as `#RRGGBB`.
+- `dynamicTimetable.highlightColors` sets the colors of `estimate`, `start`, `created` and `done` as `#RRGGBB` or `#RRGGBBAA`. Keys that are not set use the theme colors above.
+- `dynamicTimetable.completedTaskOpacity` (default 0.55; 1 = do not dim).
+- Tag colors follow the category colors, so change them with `categoryColorMap` / `categoryColors`.
+- The theme colors can also be changed per theme with `workbench.colorCustomizations`:
+
+```jsonc
+"workbench.colorCustomizations": { "dynamicTimetable.doneBackground": "#22c55e55" }
+```
+
 ## Inserting task templates
 
 Define templates in `dynamicTimetable.taskTemplates`. `body` uses **VS Code snippet syntax** (tab stops such as `${1:30}` and variables such as `$CURRENT_HOUR` work).
@@ -91,6 +117,7 @@ Snippet expansion is a VS Code feature, so please check the following in the rea
 3. One Undo reverts the whole insertion.
 4. In a CRLF file, line endings are not mixed.
 5. The keybinding `args` (selection by name) works.
+6. Highlight: the backgrounds are visible but not harsh in your light, dark and high-contrast themes, and completed lines look dimmed.
 
 ## Differences from the original plugin
 

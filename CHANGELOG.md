@@ -4,6 +4,14 @@ English | [日本語](https://github.com/walterinsect/obsidian-dynamic-timetable
 
 All notable changes to the VS Code port of Dynamic Timetable. The original Obsidian plugin is by L7Cy (MIT).
 
+## 0.7.0
+### Added
+- **Editor highlighting** on the task lines the timetable recognizes (built on the decoration API; follows your delimiter settings and updates as you type):
+  - Tags use the category colors, the same as the Timetable and Statistics.
+  - Estimates, start times, `(@created)` and `(@done)` get light backgrounds, using theme colors `dynamicTimetable.{estimate,start,created,done}Background`.
+  - Completed tasks are dimmed.
+- Settings (new **Highlight** section, all on by default): `enableHighlight`, `highlightOpacity` (0.2), `highlightColors` (`estimate` / `start` / `created` / `done` as `#RRGGBB` or `#RRGGBBAA`), `completedTaskOpacity` (0.55; 1 = off).
+
 ## 0.6.0
 ### Added
 - **Task progress in the status bar** (left side, next to the pinned-file item): `$(checklist) done/total (percent%)`, e.g. `3/8 (38%)`.

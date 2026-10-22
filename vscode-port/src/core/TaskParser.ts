@@ -140,6 +140,31 @@ export class TaskParser {
     return tasks;
   }
 
+  /** 区切り文字(エディタのハイライトが同じ正規表現を組み立てるために公開) */
+  public get delimiters(): { separator: string; startTimeDelimiter: string } {
+    return { separator: this.separator, startTimeDelimiter: this.startTimeDelimiter };
+  }
+
+  /**
+   * Timetable に載る(= filterAndParseTasks が返す)タスクの行を、文書内の行番号つきで返す。
+   * 判定は filterAndParseTasks と同じ: 日付区切り行は飛ばし、showUntilRegex で打ち切り、
+   * チェックボックス行で、見積りが読み取れるものだけ。
+   */
+  public scanTaskLines(content: string): { index: number; text: string; isCompleted: boolean }[] {
+    const found: { index: number; text: string; isCompleted: boolean }[] = [];
+    const rows = content.split('\n');
+    for (let i = 0; i < rows.length; i++) {
+      const text = rows[i].replace(/\r$/, '');
+      const task = text.trim();
+      if (this.isDateDelimiterLine(task)) continue;
+      if (this.showUntilRegex.test(task)) break;
+      if (!/^[-+*] \[[ x]\]/.test(task)) continue;
+      if (this.parseEstimate(task) === null) continue;
+      found.push({ index: i, text, isCompleted: /^[-+*] \[x\]/.test(task) });
+    }
+    return found;
+  }
+
   private isDateDelimiterLine(line: string): boolean {
     return this.dateDelimiter.test(line);
   }

@@ -23,7 +23,7 @@
   },
   "displayName": "Dynamic Timetable",
   "description": "Turn Markdown task lists with estimates into a live timetable (port of the Obsidian plugin).",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "publisher": "walterinsect",
   "license": "MIT",
   "engines": {
@@ -406,6 +406,105 @@
             ],
             "order": 27
           }
+        }
+      },
+      {
+        "title": "Highlight",
+        "order": 6,
+        "properties": {
+          "dynamicTimetable.enableHighlight": {
+            "type": "boolean",
+            "default": true,
+            "description": "Highlight tags, estimates, start times and (@created)/(@done) stamps on the task lines the timetable recognizes, and dim completed tasks.",
+            "order": 28
+          },
+          "dynamicTimetable.highlightOpacity": {
+            "type": "number",
+            "default": 0.2,
+            "minimum": 0,
+            "maximum": 1,
+            "description": "Opacity (0–1) of the highlight backgrounds. Applies to tag colors (the category colors) and to colors in highlightColors written as #RRGGBB.",
+            "order": 29
+          },
+          "dynamicTimetable.highlightColors": {
+            "type": "object",
+            "default": {},
+            "markdownDescription": "Background colors for highlights as `#RRGGBB` or `#RRGGBBAA`. Keys not set use the theme colors `dynamicTimetable.estimateBackground`, `startBackground`, `createdBackground` and `doneBackground` (customizable in `workbench.colorCustomizations`). Tag colors are the category colors (see `#dynamicTimetable.categoryColorMap#`).",
+            "properties": {
+              "estimate": {
+                "type": "string",
+                "pattern": "^#([0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+                "description": "Background color of the estimate part."
+              },
+              "start": {
+                "type": "string",
+                "pattern": "^#([0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+                "description": "Background color of the start part."
+              },
+              "created": {
+                "type": "string",
+                "pattern": "^#([0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+                "description": "Background color of the created part."
+              },
+              "done": {
+                "type": "string",
+                "pattern": "^#([0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+                "description": "Background color of the done part."
+              }
+            },
+            "additionalProperties": false,
+            "order": 30
+          },
+          "dynamicTimetable.completedTaskOpacity": {
+            "type": "number",
+            "default": 0.55,
+            "minimum": 0.1,
+            "maximum": 1,
+            "description": "Opacity of completed task lines in the editor (1 = do not dim).",
+            "order": 31
+          }
+        }
+      }
+    ],
+    "colors": [
+      {
+        "id": "dynamicTimetable.estimateBackground",
+        "description": "Background of the estimate (; 30) on task lines.",
+        "defaults": {
+          "dark": "#3b82f640",
+          "light": "#3b82f630",
+          "highContrast": "#ffffff33",
+          "highContrastLight": "#00000022"
+        }
+      },
+      {
+        "id": "dynamicTimetable.startBackground",
+        "description": "Background of the start time (@ 09:00) on task lines.",
+        "defaults": {
+          "dark": "#f59e0b40",
+          "light": "#f59e0b30",
+          "highContrast": "#ffffff33",
+          "highContrastLight": "#00000022"
+        }
+      },
+      {
+        "id": "dynamicTimetable.createdBackground",
+        "description": "Background of the (@created: …) stamp.",
+        "defaults": {
+          "dark": "#14b8a640",
+          "light": "#14b8a630",
+          "highContrast": "#ffffff33",
+          "highContrastLight": "#00000022"
+        }
+      },
+      {
+        "id": "dynamicTimetable.doneBackground",
+        "description": "Background of the (@done: …) stamp.",
+        "defaults": {
+          "dark": "#22c55e40",
+          "light": "#22c55e30",
+          "highContrast": "#ffffff33",
+          "highContrastLight": "#00000022"
         }
       }
     ]

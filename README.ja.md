@@ -53,6 +53,32 @@ startTime: 09:00:00
 
 複数行のテンプレートは従来どおり `taskTemplates`(settings.json)に書きます。
 
+## エディタ上のハイライト
+
+Timetable が認識するタスク行(見積りのあるチェックボックス行。`showUntilRegex` まで)の、拡張が理解できる部分に薄い背景色を付け、完了したタスクを薄く表示します。エディタの装飾(Decoration)機能で実現しているので、区切り文字の設定に追従し、入力に合わせて更新されます。それ以外の行には手を加えません。
+
+| 部分 | 例 | 色 |
+|---|---|---|
+| タグ | `#work` | カテゴリ色(Timetable・Statistics と共通) |
+| 見積り | `; 30` | `dynamicTimetable.estimateBackground` |
+| 開始時刻 | `@ 09:15`, `@ 2026-10-21 09:12` | `dynamicTimetable.startBackground` |
+| 作成の打刻 | `(@created: …)` | `dynamicTimetable.createdBackground` |
+| 完了の打刻 | `(@done: …)` | `dynamicTimetable.doneBackground` |
+| 完了したタスク | `- [x] …` | 行全体を薄く表示(`completedTaskOpacity`、既定 0.55) |
+
+設定(**Highlight** セクション):
+
+- `dynamicTimetable.enableHighlight`(既定オン): ハイライト全体のオン/オフ。
+- `dynamicTimetable.highlightOpacity`(既定 0.2): 背景の濃さ。タグの色と、`#RRGGBB` で書いた `highlightColors` に適用されます。
+- `dynamicTimetable.highlightColors`: `estimate` / `start` / `created` / `done` の色を `#RRGGBB` または `#RRGGBBAA` で指定。未指定のキーは上のテーマ色を使います。
+- `dynamicTimetable.completedTaskOpacity`(既定 0.55。1 で薄くしない)。
+- タグの色はカテゴリ色に従うため、`categoryColorMap` / `categoryColors` で変更します。
+- テーマ色は `workbench.colorCustomizations` でテーマごとに変更することもできます:
+
+```jsonc
+"workbench.colorCustomizations": { "dynamicTimetable.doneBackground": "#22c55e55" }
+```
+
 ## 定型タスクの挿入
 
 `dynamicTimetable.taskTemplates` にテンプレートを定義します。`body` は **VS Code のスニペット構文**です
@@ -92,6 +118,7 @@ startTime: 09:00:00
 3. 挿入を 1 回の Undo で戻せる。
 4. CRLF のファイルで改行が混在しない。
 5. キーバインドの `args`(名前指定)が動く。
+6. ハイライト: ライト・ダーク・ハイコントラストの各テーマで、背景が見えて、かつ目立ちすぎない。完了行が薄く見える。
 
 ## 元プラグインとの違い
 

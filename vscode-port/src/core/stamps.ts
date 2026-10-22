@@ -11,6 +11,18 @@ export interface Stamps {
   done?: string;
 }
 
+/** 行内の刻印の位置(先頭の空白は含めず `(` から `)` まで)。エディタのハイライト用。 */
+export const findStamps = (line: string): { kind: 'created' | 'done'; start: number; end: number }[] => {
+  const out: { kind: 'created' | 'done'; start: number; end: number }[] = [];
+  const re = new RegExp(STAMP_RE.source, 'g');
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(line)) !== null) {
+    const lead = /^[ \t]*/.exec(m[0])![0].length;
+    out.push({ kind: m[1] as 'created' | 'done', start: m.index + lead, end: m.index + m[0].length });
+  }
+  return out;
+};
+
 /** 行から刻印を取り除いた文字列と、取り出した値(同種が複数あれば先頭を採用)。 */
 export const extractStamps = (line: string): Stamps & { text: string } => {
   const found: Stamps = {};

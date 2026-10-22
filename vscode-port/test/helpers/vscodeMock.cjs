@@ -1,7 +1,8 @@
 // 結合テスト用の最小 vscode モック(extension が実際に使う API だけ)
 class Emitter { constructor(){this.l=[];this.event=(f)=>{this.l.push(f);return {dispose:()=>{this.l=this.l.filter(x=>x!==f);}};};} fire(v){[...this.l].forEach(f=>f(v));} dispose(){this.l=[];} }
 class Position { constructor(offset){this.offset=offset;} }
-class Range { constructor(s,e){this.start=s;this.end=e;} }
+class Range { constructor(a,b,c,d){ if (typeof a === 'number') { this.start={line:a,character:b}; this.end={line:c,character:d}; } else { this.start=a; this.end=b; } } }
+class ThemeColor { constructor(id){this.id=id;} }
 const Uri = {
   file: (p) => ({ scheme: 'file', path: p, toString() { return 'file://' + p; } }),
   parse: (s) => ({ raw: s, toString() { return s; } }),
@@ -14,16 +15,18 @@ function createVscode() {
   const state = {
     config: {}, messages: [], answers: {}, external: [], commands: new Map(), providers: new Map(),
     saves: 0, applyEdits: 0, snippets: [], shown: [], quickPicks: [], quickPickPick: undefined, executedArgs: [], insertSnippetResult: true,
-    emit: { activeEditor: new Emitter(), changeDoc: new Emitter(), changeConfig: new Emitter(), closeDoc: new Emitter() },
+    emit: { visibleEditors: new Emitter(), activeEditor: new Emitter(), changeDoc: new Emitter(), changeConfig: new Emitter(), closeDoc: new Emitter() },
     activeTextEditor: undefined, visibleTextEditors: [],
   };
   const msg = (kind) => async (text, ...items) => { state.messages.push({ kind, text }); return state.answers[text] ?? undefined; };
   const vscode = {
-    Uri, Range, Position, WorkspaceEdit, SnippetString, EventEmitter: Emitter, StatusBarAlignment: { Left: 1 },
+    Uri, Range, ThemeColor, Position, WorkspaceEdit, SnippetString, EventEmitter: Emitter, StatusBarAlignment: { Left: 1 },
     window: {
       get activeTextEditor() { return state.activeTextEditor; },
       get visibleTextEditors() { return state.visibleTextEditors; },
       onDidChangeActiveTextEditor: state.emit.activeEditor.event,
+      onDidChangeVisibleTextEditors: state.emit.visibleEditors.event,
+      createTextEditorDecorationType: (options) => { const t = { options, disposed: false, dispose() { this.disposed = true; } }; (state.decorationTypes = state.decorationTypes || []).push(t); return t; },
       showQuickPick: async (items, opts) => { state.quickPicks.push({ items, opts }); return items.find((i) => i.label === state.quickPickPick); },
       showTextDocument: async (doc, opts) => { state.shown.push({ doc, opts }); return state.visibleTextEditors.find((e) => e.document === doc); },
       showInformationMessage: msg('info'), showWarningMessage: msg('warn'), showErrorMessage: msg('error'),
@@ -61,6 +64,8 @@ function createVscode() {
   // insertSnippet は受け取ったスニペット文字列をそのまま文書に入れる(タブ停止の展開は VS Code 側の機能なのでモックしない)
   const makeEditor = (doc) => ({ document: doc, viewColumn: 1,
     get selection() { return { active: state.cursor || { line: 0, character: 0 } }; },
+    decorations: new Map(),
+    setDecorations(type, ranges) { this.decorations.set(type, ranges); },
     insertSnippet: async (snip, pos) => {
       state.snippets.push({ value: snip.value, offset: pos.offset });
       if (!state.insertSnippetResult) return false;

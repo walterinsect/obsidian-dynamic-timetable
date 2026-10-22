@@ -518,6 +518,108 @@ describe('extension integration (bundled dist/extension.js on a vscode mock)', (
     assert.ok(env.state.messages.some((m) => m.kind === 'error' && /failed to insert/.test(m.text)));
   });
 
+  // ---------------- Editor highlight ----------------
+  describe('editor highlight (decorations)', () => {
+    const flush = () => new Promise((r) => setTimeout(r, 400));
+    const LINES = [
+      '- [ ] 実装 ; 30 @ 09:15 #work (@created: 2026-10-21 09:00)',
+      '- [x] 休憩 ; 15 @ 2026-10-21 09:45 #life (@done: 2026-10-21 10:00)',
+      '- no estimate #work',
+    ];
+    const mkDoc = () => env.makeDoc(`---\nstartTime: ${hms(minutesAgo(30))}\n---\n${LINES.join('\n')}\n`);
+    const setup = (cfg = {}, doc = mkDoc()) => {
+      load(); env.state.decorationTypes = []; env.state.statusItems = [];
+      boot(doc, cfg);
+      return doc;
+    };
+    const edOf = (doc) => env.state.visibleTextEditors.find((e) => e.document === doc);
+    // 種類ごとに「塗られた文字列」を取り出す
+    const painted = (doc) => {
+      const lines = doc.text.split('\n'); const out = {};
+      for (const [type, ranges] of edOf(doc).decorations) {
+        if (!ranges.length) continue;
+        const o = type.options;
+        const key = o.opacity !== undefined ? 'completed' : o.backgroundColor?.id ? o.backgroundColor.id.replace('dynamicTimetable.', '').replace('Background', '') : 'tag:' + o.backgroundColor;
+        out[key] = ranges.map((r) => lines[r.start.line].slice(r.start.character, r.end.character));
+      }
+      return out;
+    };
+
+    test('default ON: estimate/start/created/done get theme colors, tags get category colors, completed line is dimmed', async () => {
+      const doc = setup(); await flush();
+      const p = painted(doc);
+      assert.deepEqual(p.estimate, ['; 30', '; 15']);
+      assert.deepEqual(p.start, ['@ 09:15', '@ 2026-10-21 09:45']);
+      assert.deepEqual(p.created, ['(@created: 2026-10-21 09:00)']);
+      assert.deepEqual(p.done, ['(@done: 2026-10-21 10:00)']);
+      assert.deepEqual(p.completed, [LINES[1]]);
+      const tagKeys = Object.keys(p).filter((k) => k.startsWith('tag:'));
+      assert.equal(tagKeys.length, 2);
+      assert.deepEqual(tagKeys.map((k) => p[k][0]).sort(), ['#life', '#work']);
+      for (const k of tagKeys) assert.match(k, /^tag:hsla\(\d+, \d+%, \d+%, 0\.2\)$/); // 薄い(highlightOpacity 既定 0.2)
+      const dim = [...edOf(doc).decorations.keys()].find((t) => t.options.opacity !== undefined);
+      assert.equal(dim.options.opacity, '0.55');
+      assert.ok(!JSON.stringify(p).includes('no estimate'), 'unrecognized line is not painted');
+    });
+
+    test('tag color == the category color used by the timetable view (alpha aside)', async () => {
+      load(); env.state.decorationTypes = [];
+      const doc = mkDoc(); const { handlers, posted } = boot(doc, { categoryColors: [{ category: 'work', color: '#ff0000' }] });
+      await handlers.msg({ type: 'ready' }); await flush();
+      const viewColor = lastUpdate(posted).colors.work; // hsla(0, 100%, 50%, 0.3)
+      const keys = [...edOf(doc).decorations.keys()].map((t) => t.options.backgroundColor).filter((c) => typeof c === 'string');
+      assert.ok(keys.includes(viewColor.replace(/[\d.]+\)$/, '0.2)')), JSON.stringify([viewColor, keys]));
+    });
+
+    test('highlightColors / highlightOpacity override the theme color', async () => {
+      const doc = setup({ highlightColors: { estimate: '#112233', done: '#aabbcc80' }, highlightOpacity: 0.5 }); await flush();
+      const bgs = [...edOf(doc).decorations.keys()].map((t) => t.options.backgroundColor);
+      assert.ok(bgs.includes('#11223380'), JSON.stringify(bgs));
+      assert.ok(bgs.includes('#aabbcc80'));
+      assert.ok(bgs.some((c) => c?.id === 'dynamicTimetable.startBackground'), 'unset keys keep the theme color');
+    });
+
+    test('enableHighlight=false → nothing is painted (and turning it on again paints)', async () => {
+      const doc = setup({ enableHighlight: false }); await flush();
+      assert.deepEqual(painted(doc), {});
+      env.state.config.enableHighlight = true;
+      env.state.emit.changeConfig.fire({ affectsConfiguration: () => true }); await flush();
+      assert.ok(painted(doc).estimate);
+    });
+
+    test('completedTaskOpacity=1 → completed lines are not dimmed', async () => {
+      const doc = setup({ completedTaskOpacity: 1 }); await flush();
+      assert.equal(painted(doc).completed, undefined);
+    });
+
+    test('follows edits: a new task is painted, a removed one is cleared', async () => {
+      const doc = setup(); await flush();
+      doc.text += '- [ ] 追加 ; 10 #work\n';
+      env.state.emit.changeDoc.fire({ document: doc, contentChanges: [{}] }); await flush();
+      assert.equal(painted(doc).estimate.length, 3);
+      doc.text = doc.text.replace(/- \[ \] 追加 ; 10 #work\n/, '').replace(LINES[0], '- [ ] 実装 #work');
+      env.state.emit.changeDoc.fire({ document: doc, contentChanges: [{}] }); await flush();
+      assert.deepEqual(painted(doc).estimate, ['; 15']);
+    });
+
+    test('other editors / non-target documents are cleared, not painted', async () => {
+      const doc = setup(); await flush();
+      const other = env.makeDoc(LINES.join('\n')); const oe = env.makeEditor(other);
+      env.state.visibleTextEditors = [...env.state.visibleTextEditors, oe];
+      env.state.emit.changeDoc.fire({ document: doc, contentChanges: [{}] }); await flush();
+      for (const ranges of oe.decorations.values()) assert.equal(ranges.length, 0);
+      assert.ok(painted(doc).estimate);
+    });
+
+    test('config change disposes old decoration types (no leak)', async () => {
+      setup(); await flush();
+      const before = env.state.decorationTypes.length;
+      env.state.config.highlightOpacity = 0.4;
+      env.state.emit.changeConfig.fire({ affectsConfiguration: () => true }); await flush();
+      assert.ok(env.state.decorationTypes.slice(0, before).every((t) => t.disposed));
+    });
+  });
+
   // ---------------- Status bar: task progress ----------------
   describe('status bar progress', () => {
     const items = () => env.state.statusItems || [];
