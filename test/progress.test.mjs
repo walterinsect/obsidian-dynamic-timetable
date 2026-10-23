@@ -36,6 +36,6 @@ describe('summarizeTasks', () => {
   test('formatting', () => {
     assert.equal(P.formatProgressText({ total: 8, done: 3, percent: 38 }), '$(checklist) 3/8 (38%)');
     const t = P.formatProgressTooltip({ total: 8, done: 3, percent: 38 }, 'plan.md');
-    assert.match(t, /Tasks: 8 · Completed: 3 · Completion: 38%/); assert.match(t, /File: plan\.md/);
+    assert.match(t, /Tasks: 8 · Completed: 3 · Not completed: 5 · Completion: 38%/); assert.match(t, /File: plan\.md/);
   });
 });

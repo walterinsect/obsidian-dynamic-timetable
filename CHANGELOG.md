@@ -4,6 +4,10 @@ English | [日本語](https://github.com/walterinsect/obsidian-dynamic-timetable
 
 All notable changes to the VS Code port of Dynamic Timetable. The original Obsidian plugin is by L7Cy (MIT).
 
+## 0.9.1
+### Added
+- The status bar tooltip now also shows the number of tasks that are not completed (postponed tasks), e.g. `Tasks: 8 · Completed: 3 · Not completed: 5 · Completion: 38%`.
+
 ## 0.9.0
 ### Added
 - **Estimate and actual are both kept** on a completed line: `; 2h20m (est 2h) @ …`. After `;` is the actual time, `(est …)` is the original estimate. Interrupt writes only the elapsed time on the finished part.

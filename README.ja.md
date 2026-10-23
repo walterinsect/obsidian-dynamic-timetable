@@ -18,7 +18,7 @@ startTime: 09:00:00
 - アクティビティバーの **Dynamic Timetable** を開くと、アクティブな Markdown ファイルのタイムテーブル(Timetable)とカテゴリ別の集計(Statistics)が表示されます。
 - Statistics は `#カテゴリ` ごとの実績(完了)と残り(見積り)を積み上げ棒で表示します。色は Timetable と共通です。
 - コマンド: Show Timetable / Show Statistics / Complete Task / Interrupt Task / Refresh / Pin Current File / Open Settings
-- ステータスバーにタスクの進捗(例: `3/8 (38%)` = 完了数/認識数と完了率)を表示します。Timetable に表示されるタスクと同じ範囲を数え、編集に合わせて更新され、クリックすると Timetable を開きます。`dynamicTimetable.showProgressInStatusBar` でオフにできます。
+- ステータスバーにタスクの進捗(例: `3/8 (38%)` = 完了数/認識数と完了率。ツールチップには未完了のタスク数も表示)を表示します。Timetable に表示されるタスクと同じ範囲を数え、編集に合わせて更新され、クリックすると Timetable を開きます。`dynamicTimetable.showProgressInStatusBar` でオフにできます。
 - Complete / Interrupt はファイルを書き換え、`startTime` を現在時刻に更新します(既定で保存まで行います)。
 
 ## 打刻(Created)

@@ -634,7 +634,7 @@ describe('extension integration (bundled dist/extension.js on a vscode mock)', (
       assert.equal(it.align, 1); assert.equal(it.shown, true);
       assert.equal(it.text, '$(checklist) 1/3 (33%)');
       assert.equal(it.command, 'dynamicTimetable.show');
-      assert.match(it.tooltip, /Tasks: 3 · Completed: 1 · Completion: 33%/);
+      assert.match(it.tooltip, /Tasks: 3 · Completed: 1 · Not completed: 2 · Completion: 33%/);
     });
 
     test('updates when the document changes', async () => {

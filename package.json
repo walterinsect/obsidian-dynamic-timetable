@@ -23,7 +23,7 @@
   },
   "displayName": "Dynamic Timetable",
   "description": "Turn Markdown task lists with estimates into a live timetable (port of the Obsidian plugin).",
-  "version": "0.9.0",
+  "version": "0.9.1",
   "publisher": "walterinsect",
   "license": "MIT",
   "engines": {

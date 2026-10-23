@@ -19,6 +19,6 @@ export const formatProgressText = (s: ProgressSummary): string =>
 
 export const formatProgressTooltip = (s: ProgressSummary, file?: string): string => {
   const head = 'Dynamic Timetable: task progress';
-  const body = s.percent === null ? 'No tasks recognized' : `Tasks: ${s.total} · Completed: ${s.done} · Completion: ${s.percent}%`;
+  const body = s.percent === null ? 'No tasks recognized' : `Tasks: ${s.total} · Completed: ${s.done} · Not completed: ${s.total - s.done} · Completion: ${s.percent}%`;
   return [head, body, file ? `File: ${file}` : undefined, 'Click to show the timetable'].filter(Boolean).join('\n');
 };
